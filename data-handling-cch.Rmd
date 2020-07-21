@@ -1,0 +1,454 @@
+---
+title: "Data handling for iron project -- case-cohort sample"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document:
+    latex_engine: pdflatex 
+    keep_tex: yes
+    toc: yes
+    toc_depth: 3
+    number_sections: true
+  html_document:
+    theme: united
+    toc: yes
+fig.cap: yes
+editor_options:
+  chunk_output_type: console
+geometry: margin=1.5cm
+urlcolor: blue
+linkcolor: magenta
+citecolor: red
+---
+
+# Data handling for the R project
+
+```{r , include=FALSE}
+knitr::opts_chunk$set(echo = T, 
+                      results = 'markup',
+                      warning = F,
+                      tidy.opts=list(width.cutoff=80),
+                      tidy=TRUE)
+
+#runif(1, 0, 10^8)
+set.seed(74268794)
+```
+
+
+```{r, include=F}
+# bring in packages
+
+require("DiagrammeR")
+require(haven)
+
+require(labelled)
+require(tableone)
+require(summarytools)
+
+```
+
+## My original work in R
+
+```{r, eval=T}
+
+# read original SAS data into R
+df1 =  read_sas(data_file="../../Sister Study/data/dr00224_00_02/dr00224_00_02.sas7bdat",
+                 catalog_file = "../../Sister Study/formats-subset/sisformats.sas7bcat" ) 
+
+table(as_factor(df1$DR224_FU_BCInvD_Event_Serum))
+with(df1, table(FU_BC_Event, FU_BCInvD_Event))
+
+```
+
+
+```{r}
+
+df2 = df1[, c('PSID', 'FU_BCInvD_Event',
+              'AgeExact_Baseline',
+              'FU_BCInvD_EOFAgeExact',
+              'FU_BCInvD_EOFAge', "HH_PSID",
+              'UMN_Iron_Subcohort',
+              'UMN_Iron',
+              "UMN_Iron_SCL_BCInvD_Event",
+              "UMN_Iron_Baseline_FE",
+              'UMN_Iron_Baseline_FERTN',
+              'UMN_Iron_Baseline_FESAT',
+              'UMN_Iron_Baseline_UIBC',
+              'FU_BCInvD_DxAgeExactMax',
+              'FU_BCInvD_DxAgeExactMin',
+              'DR224_FU_BCInvD_Event_Serum',
+              "FU_BC_Event",
+              'SCL_BC_Event')]
+dim(df2) # 50,884
+
+names.vars = c('PSID', "event", 
+              'baseline.age',
+              'FU_BCInvD_EOFAgeExact',
+              'FU_BCInvD_EOFAge', 'HH_PSID',
+              'UMN_Iron_Subcohort',
+              "UMN_Iron",
+              "UMN_Iron_SCL_BCInvD_Event",
+              "UMN_Iron_Baseline_FE",
+              'UMN_Iron_Baseline_FERTN',
+              'UMN_Iron_Baseline_FESAT',
+              'UMN_Iron_Baseline_UIBC',
+              'FU_BCInvD_DxAgeExactMax',
+              'FU_BCInvD_DxAgeExactMin',
+              'DR224_FU_BCInvD_Event_Serum',
+              "FU_BC_Event",
+              'SCL_BC_Event')
+
+colnames(df2) = names.vars
+
+
+df2 = within(df2, {
+  c.age = ifelse(is.na(FU_BCInvD_EOFAgeExact),
+                    FU_BCInvD_EOFAge + round(runif(nrow(df2),0,1), 2), 
+                    FU_BCInvD_EOFAgeExact)
+  start.age = baseline.age
+  futime = c.age - start.age
+})
+
+dim(df2)
+
+# select people from study
+df2 = df2[df2$UMN_Iron==1,]
+dim(df2) # 6011
+
+df2 = df2[which(complete.cases(df2$PSID)),]
+dim(df2)  # 6008 (eliminate 3 people who overlap in prospective BRCA study and twice studied validation). see "Sampling Protocol for Iron Project based on Iron Panel Assays in Serum_20190715.docx"
+
+table(as_factor(df2$UMN_Iron_Subcohort)) # check
+
+```
+
+
+```{r, eval=F, include=F}
+# check number of cases in subcohort to make sure it matches with
+# "Sampling Protocol for Iron Project based on Iron Panel Assays in Serum_20190715.pdf" document
+# that document has 125+78 = 203 cases
+
+table(as_factor(df2$UMN_Iron_Subcohort), df2$event)
+# I get 222 cases. 222 cases were from release 7 and 203 cases were from release 6 when the document was made (see 4/15/2020 email from Deb Bookwalter)
+
+```
+
+
+```{r}
+
+df3. = df2
+dim(df3.)
+
+# Get labels back
+df3. <- df3. %>% copy_labels_from(df1) # Source: http://larmarange.github.io/labelled/reference/copy_labels.html
+
+# create a subcohort binary variable: 1=subcohort 0=not
+
+df3.$UMN_Iron_Subcohort[is.na(df3.$UMN_Iron_Subcohort)] = 0 # convert missing to 0s
+head(df3.$UMN_Iron_Subcohort) # check
+dim(df3.)
+table(is.na(df3.$PSID))
+
+
+table(df3.$UMN_Iron_Subcohort)  # check. This matches numbers in documentation.
+
+summary(df1$FU_BCInvD_Event)
+with(df3., table(UMN_Iron_Subcohort, event))
+with(df3., sum(table(UMN_Iron_Subcohort, event)))
+df3.$iron.study = df3.$UMN_Iron
+
+head(df3.[which(df3.$UMN_Iron_Subcohort==0 & df3.$event==0), c("PSID", "UMN_Iron_Baseline_FE",
+                                                        "iron.study", "UMN_Iron_Subcohort",
+                                                        "UMN_Iron_SCL_BCInvD_Event", "event",
+                                                        "start.age", "c.age")], 15)
+
+psid.exclude.noevent = df3.[which(df3.$UMN_Iron_Subcohort==0 & df3.$event==0),]$PSID
+psid.exclude.noevent
+# 9 people are not in subcohort, but they do not have an event. Will exclude later
+
+# One of these participants is labeled as cases with UMN_Iron_SCL_BCInvD_Event (UMN Iron: Prospective BrCa Survivor Study, SCL BrCa case status at time of sampling (1=dx before SCL blood draw 0=dx after SCL Blood Draw) [data release 6.0])
+
+head(df1[df1$PSID %in% c('00224_200085'),c("PSID",  "UMN_Iron_Baseline_FE", "UMN_Iron_Subcohort",
+                                 "UMN_Iron_Validation", "UMN_Iron_SCL_BCInvD_Event", "FU_BCInvD_Event",
+                                 "AgeExact_Baseline", "FU_BCInvD_EOFAge")])
+
+with(df3., table(UMN_Iron_Subcohort, event))
+table(df3.$UMN_Iron_Subcohort)
+
+df3.$subcohort = df3.$UMN_Iron_Subcohort
+with(df3., table(subcohort, event))
+
+nrow(df3.)
+table(df3.$subcohort)
+
+with(df3., table(subcohort, event, useNA="always")) #2796+9 = 2805 and 2978+222 = 3200
+# there are 9 people who are not in subcohort and do not have an event according to the 'FU_BCInvD_Event' variable
+# They are people who were cases in v6 but not in v7.
+
+table(df3.$subcohort)
+
+```
+
+
+
+### Remove participants who have unknown timing (u=3). 5952 - 5949 = 3
+
+For missing tags in SAS format,
+FUEVENT_S format in the sisformats.bcat file indicates 
+.U) Timing unk (relative to baseline) (n=3)
+
+
+```{r}
+
+# get information on missing event status
+df3.$event.zap = zap_missing(df3.$event)
+summary(df3.$event.zap)
+
+ids.withdraw = df3.[is.na(df3.$event.zap), c("PSID")] # note: having problems with missing in haven_labelled. zap_missing?
+
+head(ids.withdraw)
+nrow(ids.withdraw)
+
+# NOTE: that the W withdraw category is NOT in the SAS format catalog provided to me.
+ 
+df3.. = df3.[!(df3.$PSID %in% ids.withdraw$PSID),]
+
+dim(df3..)
+
+summary(df3..$futime) # 9 missing futime after removing 3 with unknown timing.
+
+table(df3.[df3.$PSID %in% ids.withdraw$PSID,]$subcohort)
+
+```
+
+
+### For participants who are missing a follow-up age, take the median for min/max age : (n=9)
+
+
+```{r}
+
+# NOTE: KOB suggested we use min/max follow-up age to find a follow-up age instead of removing from sample.
+# after 3/2020 draft review
+
+table(df3..[(is.na(df3..$c.age)),]$event) # all 9 had an event
+table(df3..[(is.na(df3..$c.age)),]$FU_BCInvD_DxAgeExactMax) # max age at event
+table(df3..[(is.na(df3..$c.age)),]$FU_BCInvD_DxAgeExactMin) # min age at event
+
+df4 = df3..
+df4$median = apply(df4[c("FU_BCInvD_DxAgeExactMax", "FU_BCInvD_DxAgeExactMin")], 1, median)
+head(df4[is.na(df4$c.age), c("event", 
+                                     "FU_BCInvD_DxAgeExactMax", "FU_BCInvD_DxAgeExactMin",
+                                     "FU_BCInvD_EOFAgeExact", "FU_BCInvD_EOFAge", 
+                                   "c.age", "median")])
+
+df4$c.age = with(df4, ifelse(is.na(c.age), 
+                                              median,
+                                              c.age))
+
+head(df4[, c("event", 
+                                     "FU_BCInvD_DxAgeExactMax", "FU_BCInvD_DxAgeExactMin",
+                                     "FU_BCInvD_EOFAgeExact", "FU_BCInvD_EOFAge", 
+                                   "c.age")])
+
+df4[which(is.na(df4$c.age)),  c("event", 
+                                     "FU_BCInvD_DxAgeExactMax", "FU_BCInvD_DxAgeExactMin",
+                                     "FU_BCInvD_EOFAgeExact", "FU_BCInvD_EOFAge", 
+                                   "c.age")]
+
+df4$futime = with(df4, ifelse(is.na(futime), c.age-baseline.age, futime))
+dim(df4)
+
+
+```
+
+
+### Remove people with futime = 0 (n=14) 6005 - 5991 = 14
+
+```{r}
+
+df5 = df4[which(!(df4$futime==0)),]
+dim(df5)
+dim(df4)
+
+dim(df4) - dim(df5)
+
+table(df4$futime==0)
+table(is.na(df5$futime))
+
+with(df5, table(event, UMN_Iron_Subcohort, DR224_FU_BCInvD_Event_Serum))
+with(df5, sum(table(event, UMN_Iron_Subcohort, DR224_FU_BCInvD_Event_Serum)))
+
+```
+
+### Remove people with uncertain event status following case-cohort sampling (n=9) 5991 - 5982 = 9
+
+```{r}
+# there are 9 people who are not in subcohort and do not have an event according to the 'FU_BCInvD_Event' variable
+# They are people who were cases in v6 but not in v7 (see 4/15/2020 email from Deb Bookwalter).
+# These 9 who were cases in release 6 but not in release 7
+
+with(df5, table(subcohort, event))
+# there are 9 people who are not in subcohort and do not have an event according to the 'FU_BCInvD_Event' variable
+with(df5, table(subcohort, event, FU_BC_Event))
+with(df5, table(subcohort, event, SCL_BC_Event, useNA="always"))
+
+miss.event = df5[which(df5$subcohort==0 & df5$event==0), ]$PSID
+miss.event
+
+df6 = df5[which(!(df5$PSID %in% miss.event)),]
+dim(df6)
+dim(df5)
+dim(df5) - dim(df6)
+
+head(data.frame(df5)[df5$PSID ==  "00224_200085",])
+
+table(is.na(df6$futime))
+
+```
+
+
+### Remove participants who are missing at least one iron measure (5982 - 5926 = 56)
+
+```{r}
+
+summary(as_factor(df6$UMN_Iron_Baseline_FE))
+
+df7 = df6[!(is.na(df6$UMN_Iron_Baseline_FE)) |
+           !(is.na(df6$UMN_Iron_Baseline_FERTN)) |
+           !(is.na(df6$UMN_Iron_Baseline_FESAT)),]
+
+dim(df7) # with at least one non-missing iron val, 5926
+dim(df6) - dim(df7) # remove 56 with missing baseline iron values
+
+dim(df6) # 5982 - 5926 = 56 
+
+table(df6$subcohort)
+
+```
+
+
+```{r, eval=F}
+
+summary(as_factor(df3$UMN_Iron_Baseline_FE))
+summary(as_factor(df3$UMN_Iron_Baseline_FESAT))
+summary(as_factor(df3$UMN_Iron_Baseline_FERTN))
+summary(as_factor(df3$UMN_Iron_Baseline_UIBC))
+
+```
+
+
+```{r, eval=F}
+# Source: https://cran.r-project.org/web/packages/summarytools/vignettes/Recommendations-rmarkdown.html
+st_options(bootstrap.css     = FALSE,       # Already part of the theme so no need for it
+           plain.ascii       = FALSE,       # One of the essential settings
+           style             = "rmarkdown", # Idem.
+           dfSummary.silent  = TRUE,        # Suppresses messages about temporary files
+           footnote          = NA,          # Keeping the results minimalistic
+           subtitle.emphasis = FALSE)       # For the vignette theme, this gives
+                                            # much better results. Your mileage may vary.
+```
+
+
+```{r, eval=F}
+
+df3.sub = df3[c("UMN_Iron_Baseline_FE",
+                "UMN_Iron_Baseline_FESAT",
+                "UMN_Iron_Baseline_FERTN",
+                "UMN_Iron_Baseline_UIBC")]
+head(df3.sub)
+# Source: https://dabblingwithdata.wordpress.com/2018/01/02/my-favourite-r-package-for-summarising-data/
+dfSummary(df3.sub, style = 'grid', graph.magnif = 0.75, tmp.img.dir = "/tmp")
+
+```
+
+
+```{r, include=F, eval=F}
+attributes(df2$event)
+
+# get the missing formats so I can exclude
+# see haven documentation, vignette("semantics") for more info
+table(as_factor(df2$event))
+```
+
+```{r}
+
+psid.include = df7$PSID
+length(psid.include)  # 5926
+
+save(psid.include, file="ids-include.RData")
+
+table(df7$subcohort, df7$event)
+
+```
+
+
+```{r, eval=F, include=F}
+# NOTE: run this separately, go to viewer, select Export|Copy to Clipboard, enlarging width while keeping aspect ratio. Then paste into Microsoft Paint program and crop to fit. Save as flowchart.png. (or save as png directly in viewer as Export|Save as Image)
+
+# sources: https://www.graphviz.org/Documentation/TSE93.pdf
+# https://stackoverflow.com/questions/27110526/how-to-manage-distance-between-nodes-in-graphviz
+fig.sample <- "
+digraph flow2 {
+
+  # several 'node' statements
+  node [shape = box,
+        fontname=Arial, fontsize=50,
+        color = black]; // for the letter nodes, use box shapes
+
+# Source: https://graphviz.readthedocs.io/en/stable/manual.html
+  edge [arrowhead=vee arrowsize=4 ]
+
+  Z[label=\"n=6,008 \"];
+  Z1[label=\"Missing event status\n because timing unknown \nrelative to baseline (n=3)\"];
+
+/*  A[label=\"n= \"]; */
+/*  A1[label=\"Missing follow-up age (n=9)\"]; */
+
+  A[label=\"n=6,005\"]; 
+  A1[label=\"Follow-up time = 0 (n=14)\"];
+
+  C[label=\"n=5,991\"]; 
+  C1[label=\"Uncertain event status \nin case-cohort \n selection(n=9)\"];
+  
+  D[label=\"n=5,982\"]; 
+  D1[label=\"Missing at least\n one iron measure (n=56)\"];
+  
+  E[color=green, penwidth=3, label=\"n=5,926\"]; 
+
+  {rank = same; Z Z1}
+  {rank = same; A A1}
+/*  {rank = same; B B1}*/
+  {rank = same; C C1}
+  {rank = same; D D1}
+
+  # several 'edge' statements
+  edge [color = black] // this sets all edges to be black (unless overridden)
+
+    Z -> Z1;
+    Z -> A;
+
+    A -> A1;
+    A -> C;
+/*    A -> B;*/
+
+/*    B -> B1;*/
+/*    B -> C;*/
+
+    C -> C1;
+    C -> D;
+
+    D -> D1;
+    D -> E;
+
+  # a 'graph' statement
+  graph [overlap = true
+        nodesep=\"1\",
+        ranksep=\"1\"]
+}
+"
+
+grViz(fig.sample)
+```
+
+
+![Exclusions](../sections/flow-sample-cch.png)
+

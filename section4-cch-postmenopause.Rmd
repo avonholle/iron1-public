@@ -1,0 +1,289 @@
+---
+title: "Section 4: Post-hoc 1: Association between extreme ferritin levels and breast cancer risk (case-cohort analysis). Restricted to postmenopausal women at baseline."
+output:
+  pdf_document:
+    toc: no
+    number_sections: true
+    includes:
+      in_header: header.tex 
+  html_document:
+    theme: united
+    toc: yes
+geometry: margin=1.5cm
+always_allow_html: true
+---
+
+
+# Section 4: Post-hoc 1: Association between extreme ferritin levels and breast cancer HR (case-cohort analysis). Restricted to postmenopausal women at baseline.
+
+
+- Define high levels as $\geq$ 200 $\mu$g/L and 300 $\mu$g/L for premenopausal and postmenopausal females, respectively. [@koperdanovaInterpretingRaisedSerum2015].
+
+- Iron deficiency commonly identified as < 30 $\mu$g/L [@soppiIronDeficiencyAnemia2018].
+    - Values can range from 12 to 100 $\mu$g/L [@peyrin-birouletGuidelinesDiagnosisTreatment2015]. 
+    - WHO definitions have a threshold at < 15 $\mu$g/L. 
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = F, 
+                      results = 'markup',
+                      warning = F)
+
+```
+
+
+```{r, include=F}
+# bring in packages
+require(knitr)
+require(data.table)
+require(tableone)
+require(ggplot2)
+require(kableExtra)
+require(rowr)
+require(survival)
+require(stargazer)
+require(splines)
+require(ggplot2)
+require(survminer)
+
+require(dplyr)
+require(reshape2)
+```
+
+
+```{r}
+
+# source: section1.Rmd
+load(file="../sections/updated-data-iron.RData") # df3 is the iron subset
+
+df = data.frame(df3)
+df = df[df$menop.status==1,]
+
+```
+
+
+```{r, results='hide'}
+
+# handle data for survival analysis
+
+df = within(df, {
+
+  
+  fe.log = log(UMN_Iron_Baseline_FE)
+  fertn.log = log(UMN_Iron_Baseline_FERTN)
+  fesat.log = log(UMN_Iron_Baseline_FESAT)
+  tibc.log = log(UMN_Iron_Baseline_TIBC)
+  uibc.log = log(UMN_Iron_Baseline_UIBC)
+    
+  fe.scale = scale(log(UMN_Iron_Baseline_FE), scale=F)
+  fertn.scale = scale(log(UMN_Iron_Baseline_FERTN), scale=F)
+  fesat.scale = scale(log(UMN_Iron_Baseline_FESAT), scale=F)
+  tibc.scale = scale(log(UMN_Iron_Baseline_TIBC), scale=F)
+  uibc.scale = scale(log(UMN_Iron_Baseline_UIBC), scale=F)
+
+})
+
+# took out 'ever.donate.b.f' 9/12/2019
+confounder.list = c('smoke.f2', 'alc.f2', 'educ.f2', 'ever.hrt.f', 'birth.control.f',
+                    'one.term.birth.f')
+
+
+# time-dept menopause ==============================
+
+summary(df$fu.meno.age) # 892 missing
+df$miss.meno.age = with(df, is.na(df$fu.meno.age))
+with(df, table(miss.meno.age, menop.status)) # 27 people are post-menopausal at baseline but no age at menopause. Put age at menopause at baseline age.
+
+# should I assume they are still pre-menopausal at baseline?
+df$fu.meno.age.rev = with(df, ifelse( is.na(fu.meno.age)==T & menop.status==1, baseline.age,
+                                    ifelse(is.na(fu.meno.age)==T & menop.status==0, 99, fu.meno.age )))
+summary(df$fu.meno.age.rev)
+
+df[df$PSID %in% c("00224_100003"), c("fu.meno.age", "baseline.age", "menop.status", "fu.meno.age.rev")]
+
+df$miss.meno.age.rev = with(df, is.na(df$fu.meno.age.rev))
+with(df, table(miss.meno.age.rev, menop.status)) # check
+
+```
+
+## High values of ferritin, > 300 $\mu$g/L
+
+```{r}
+
+df$iron.cov1 = with(df, ifelse( (menop.status==1 & UMN_Iron_Baseline_FERTN>300) | 
+                                 (menop.status==0 & UMN_Iron_Baseline_FERTN>200), 1,
+                              ifelse(!is.na(UMN_Iron_Baseline_FERTN), 0, NA)))
+table(df$iron.cov1, useNA = "ifany")
+
+cox.overload = coxph(Surv(start.age, c.age, event) ~ iron.cov1,
+             data=df); cox.overload
+
+```
+
+```{r, results='markup'}
+cox.overload
+```
+
+
+### Association between breast cancer HR and lower thresholds
+
+
+```{r}
+
+# function to output HR with 95% ci =========================
+get.ci = function(df){
+  
+  colnames(df)[which(colnames(df) %in% c("SE"))] = "se.coef"
+  colnames(df)[which(colnames(df) %in% c("p"))] = "p.value"
+  colnames(df)[which(colnames(df) %in% c("Value"))] = "coef"
+
+  # source: https://stackoverflow.com/questions/50118394/selecting-and-colouring-single-table-cells-with-kableextra-in-r-markdown-cell-sp
+  
+   with(data.frame(df),  ifelse(p.value<0.05/100, # I'm trying to get rid of bolding so makeing really extreme.
+                                paste0("\\textbf{",
+                                       formatC(round(exp(coef),2), format="f", flag='0', digits=2),
+                                       " (",
+                                      formatC(round(exp(coef-1.96*se.coef),2), format="f", digits=2),
+                                      ", ",
+                                      formatC(round(exp(coef+1.96*se.coef),2), format="f", digits=2),
+                                      ")}"),
+        paste0(formatC(round(exp(coef),2), format="f", flag='0', digits=2),
+                                  " (",
+                                  formatC(round(exp(coef-1.96*se.coef),2), format="f", digits=2),
+                                  ", ",
+                                  formatC(round(exp(coef+1.96*se.coef),2), format="f", digits=2),
+                                  ")")))
+  }
+
+```
+
+```{r, include=F, eval=F}
+
+with(df, table(UMN_Iron_Baseline_FERTN<=12))
+with(df, table(UMN_Iron_Baseline_FERTN<=25))
+with(df, table(UMN_Iron_Baseline_FERTN<=30))
+with(df, table(UMN_Iron_Baseline_FERTN<=45))
+with(df, table(UMN_Iron_Baseline_FERTN<=100))
+
+
+```
+
+
+```{r}
+# make a function of the previous analyses repeating over covariates.
+
+get.coefs = function(threshold, extreme="low", n.size=50784) {
+
+# threshold=12; extreme="low" ; n.size=50784 # debug
+var.fe = "fertn"
+
+# designate the iron covariate  
+iron.var = if(extreme == "low") {
+  with(df, ifelse(UMN_Iron_Baseline_FERTN<=threshold, 1, 
+                               ifelse(!is.na(UMN_Iron_Baseline_FERTN), 0, NA)))
+  } else {
+    with(df, ifelse(UMN_Iron_Baseline_FERTN>=threshold, 1, 
+                               ifelse(!is.na(UMN_Iron_Baseline_FERTN), 0, NA)))
+  }
+
+df$iron.var = iron.var
+summary(df$iron.var)
+df  = df[complete.cases(df$iron.var),]
+
+# 1) Cox ph with quartiles ==================================
+
+cox1 = cch(Surv(start.age, c.age, event) ~ iron.var,
+             data=df,
+             subcoh = ~subcohort,
+             id = ~ PSID,
+             cohort.size=n.size)
+
+cq = coef(summary(cox1))
+coefs.1 = get.ci(cq)[1]
+m.event = summary(cox1)$nevent
+tot = nrow(df)
+
+n.threshold = table(iron.var)[2] # number < that are in subcohort
+n.threshold.sub = table(df$iron.var,df$subcohort)[2,2] # number < that are in subcohort
+sub.size = cox1$subcohort.size
+
+cox1.info = data.frame(threshold = threshold,
+                       coef = coefs.1,
+#                       n.threshold= paste0(n.threshold, " (", tot, ")" )
+                      n.threshold=n.threshold)
+
+# put all this info into a list of objects to output from the function =====================
+
+return(list(cox1.info))
+
+}
+
+# get.coefs( threshold=30) # check
+
+```
+
+```{r}
+
+# lower thresholds
+thresh = c(12, 25, 45)
+  
+models1 = lapply(thresh, function(x) get.coefs(x, "low"))
+
+models1
+
+```
+
+
+```{r}
+
+# upper thresholds
+thresh = c(300)
+  
+models.high = lapply(thresh, function(x) get.coefs(x, "high"))
+
+models.high
+
+```
+
+
+```{r}
+
+# extract out first element from each list, the coefficients to print off to table
+coefs.list = lapply(models1, '[[', 1)  # This returns a list with only the third element, the extracted coef data frame
+coefs.list
+
+
+coefs.list.h = lapply(models.high, '[[', 1)  # This returns a list with only the third element, the extracted coef data frame
+coefs.list.h
+
+cox.dat.post1 =  coefs.list %>% bind_rows() # source: https://stackoverflow.com/questions/2641653/pass-a-data-frame-column-name-to-a-function
+cox.dat.post1$high=0
+
+cox.dat.post2 =  coefs.list.h %>% bind_rows() 
+cox.dat.post2$high=1
+
+
+cox.dat.post = rbind(cox.dat.post1, cox.dat.post2)
+cox.dat.post
+
+cox.dat.post$threshold.f = with(cox.dat.post, factor(threshold, 
+                                         labels = c("$\\leq$ 12",
+                                                    "$\\leq$ 25",
+                                                    "$\\leq$ 45",
+                                                    "$\\geq$ 300" )))
+cox.dat.post
+
+save(cox.dat.post, file="../sections/k4-post.RData")
+
+```
+
+
+
+```{r, results='markup'}
+kable(cox.dat.post, 
+      booktabs=T, 
+      col.names = c("Ferritin $\\leq$ threshold ($\\mu$g/L)", "HR (95\\% CI)", "n below", "High/low",
+                    "threshold"),
+      escape=F)
+
+```
+

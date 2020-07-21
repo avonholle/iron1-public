@@ -1,0 +1,461 @@
+---
+title: "Section 9: Post-hoc 6: Assess association between breast cancer subtypes and iron status"
+output:
+  pdf_document:
+    toc: yes
+    number_sections: true
+    toc_depth: 3
+    includes:
+      in_header: header.tex 
+  html_document:
+    theme: united
+    toc: yes
+always_allow_html: true
+urlcolor: red
+geometry: margin=1.5cm
+header-includes:
+   - \setlength\parindent{24pt}\setlength{\parskip}{0.0pt plus 1.0pt}
+fontsize: 17pt
+editor_options:
+  chunk_output_type: console
+---
+
+# Section 9. Post-hoc 6: Assess association between breast cancer subtypes and iron status
+
+This version evaluates iron status as a covariate and subtypes as the outcome in either logistic regression or polyotomous regression.
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = F, 
+                      results = 'markup',
+                      warning = F,
+                      message=F)
+
+```
+
+
+```{r, include=F}
+# bring in packages
+require(knitr)
+require(ggplot2)
+require(kableExtra)
+
+library(dplyr)
+library(tidyr)
+require(haven)
+require(Hmisc)
+require(olsrr)
+
+require(car)
+require(nnet)
+
+require(dplyr)
+require(data.table)
+
+
+```
+
+```{r,eval=F, include=F}
+load(file="../sections/updated-data.RData") # load original data, df1
+dim(df1)
+
+# Percent invasive (letter to editor)?
+# create a dcis vs invasive dxtype based on FU_BCInvD_DxType
+test = df1[c("FU_BCInvD_DxType")]
+
+# dxtype format:
+# 12-20.1 = invasive
+# 22-29 = in situ
+# 32+ = unknown
+table(test$FU_BCInvD_DxType)
+
+test = within(test, {
+  dxtype = cut(FU_BCInvD_DxType, c(12,19.9,28.8,41), include.lowest = T)
+  dxtype.f = factor(dxtype, labels=c("Invasive",
+                                     "InSitu",
+                                     "Unknown"))
+  dxtype.f2 = ifelse(dxtype.f %in% c("Invasive", "InSitu"), dxtype.f, NA) # set unknown to missing
+  dxtype.f2 = factor(dxtype.f2, labels=c("Invasive", "InSitu"))
+})
+
+table(test$dxtype)
+table(test$dxtype.f2)
+
+prop.table(table(test$dxtype.f2))
+
+```
+
+```{r, echo=F}
+
+# source: section1.Rmd
+load(file="../sections/updated-data-iron.RData") # df3 is the iron subset
+
+df = data.frame(df3)
+summary(df$c.age)
+
+```
+
+## Data handling
+
+```{r, echo=T}
+
+df = within(df, {
+  log.fertn = log(fertn)
+  log.fe = log(fe)
+  log.fesat = log(fesat)
+  
+  # years since LMP at baseline
+  diff.yrs.lmp =  start.age - FU_BCInv_LMP
+  yrs.since.lmp = ifelse(diff.yrs.lmp<0, 0, 
+                         start.age - FU_BCInv_LMP)
+  
+  # years menstruation
+  yrs.mens = as.numeric(FU_BCInv_LMP - age.menarche - term.births)
+  
+  # PR subtype
+  pr = FU_BC_DxPR_Result
+  
+  # ER subtype
+  er = FU_BC_DxER_Result
+  
+  # HER2 subtype
+  her2 = FU_BCInvD_DxHER2_Result
+
+})
+
+label(df$yrs.since.lmp) = "Age at LMP - baseline age"
+label(df$yrs.mens) = "Age at LMP - age at menarche - total term births"
+
+df.orig=df # for regression analyses. without formatting
+
+
+```
+
+
+```{r, include=F}
+# make a data frame with all missing values corresponding to one value, NA, and all labels matching the SAS formats
+
+df2 = zap_missing(df.orig) # get rid of special missing values
+
+nums <- unlist(lapply(df2, is.labelled))
+
+hlabelled = unlist(apply(df2, 2, function(x) class(x)=="haven_labelled")) # can't use lapply for this function.
+
+
+df2[,hlabelled] = lapply(df2[,hlabelled], as_factor)   # apply SAS formats and make R labels to factors. Source: https://haven.tidyverse.org/reference/as_factor.html
+
+
+```
+
+```{r, echo=T}
+
+# create a er/pr/her2 subtype
+
+df = within(df, {
+  subtype = ifelse( (er==1|pr==1) & her2==2, 1,
+                    ifelse( (er==1|pr==1) & her2==1, 2,
+                           ifelse((er==2 & pr==2) & her2==1, 2,
+                                  ifelse((er==2 & pr==2) & her2==2, 3, NA)))) # See https://academic.oup.com/jnci/article/103/3/250/2517238 for designation of subtypes
+  
+  subtype.f = factor(subtype, labels = c("HR+/HER2-",
+                                         "HR+/HER2+ or HR-/HER2+ vs HR+/HER2-",
+                                         "HR-/HER2- vs HR+/HER2-"))
+  subtype.f = relevel(subtype.f, ref="HR+/HER2-") # make referent group the most frequent
+  
+})
+# HR+/HER2- is ER+/HER2- or PR+/HER2-
+# HR-/HER2- is ER-/PR-/HER2- vs HR+/HER2-
+# HR+/HER2+  is ER+/HER2+ or PR+/HER2+
+# HR-/HER2+ is ER-/PR-/HER2+
+
+```
+
+## Notes about subtype
+
+ER/PR/HER2 subtype derived from [Yang et al. 2011](https://academic.oup.com/jnci/article/103/3/250/2517238)
+
+Also noted [here](https://seer.cancer.gov/statfacts/html/breast-subtypes.html) in SEER web site.
+
+![Breast cancer subtypes](seer-subtypes.PNG)
+
+
+## Distribution of subtypes
+
+### Combination of ER/PR/HER2
+
+```{r, results='markup'}
+
+kable(table(as_factor(df$subtype.f)),
+      booktabs=T)
+
+```
+
+
+```{r}
+
+
+#### obtain iron PCs
+
+# Source: https://raw.githubusercontent.com/WinVector/Examples/master/PCR/XonlyPCA.Rmd
+extractProjection <- function(ndim,princ) {
+  # pull off the rotation.  
+  proj <- princ$rotation[,1:ndim] 
+  # sign was arbitrary, so flip in convenient form 
+  for(i in seq_len(ndim)) {
+    si <- sign(mean(proj[,i]))
+    if(si!=0) {
+      proj[,i] <- proj[,i]*si
+    }
+  }
+  proj
+}
+```
+
+
+
+```{r}
+# get PC
+iron.vars = c("fe", 'log.fesat', "fertn")
+df.complete = df[complete.cases(df[c(iron.vars)]),]
+#df.complete = df.orig[complete.cases(df.orig[c(iron.log.vars)]),]
+# Source: http://www.win-vector.com/blog/2016/05/pcr_part1_xonly/
+m.df = as.matrix(df.complete[, iron.vars]) # use complete cases
+pca.log = prcomp(m.df, center=T, scale.=T)
+projected.1.alt <-
+  as.data.frame(scale(m.df) %*% extractProjection(3, pca.log),
+                                 stringsAsFactors = FALSE)
+# combine pca with data
+pc.dat = cbind(projected.1.alt, df.complete) # add PC to total data set
+```
+
+
+## Evaluate multinomial logistic regression model to evaluate association between odds of tumor subtypes and levels of iron biomarkers: iron, transferrin saturation, ferritin and first principal component.
+
+Model: $\textrm{logit(subtype)} = \beta_1 \times \textrm{iron biomarker} + \beta_2 \times \textrm{baseline age} + \beta_3 \times \textrm{menopause status}$
+
+```{r}
+# function to produce a multinomial regression object
+
+get.m.log = function(outcome, cov, df1) {
+  
+  # outcome = 'subtype.f'; cov='fe'; df1=pc.dat # debug
+  # outcome = 'her2.rev'; cov='fe'; df1=pc.dat # debug
+  form1 = as.formula(paste(outcome, paste(c(cov, "c.age", "early.menop.45"), collapse=" + "), sep=" ~ "))
+  
+  m1 = multinom(form1, data=df1) 
+# source: https://stats.idre.ucla.edu/r/dae/multinomial-logistic-regression/
+  
+    coef = summary(m1)$coefficients
+    coef
+
+    se = summary(m1)$standard.errors
+    se
+    
+    z <- coef/se
+    z
+    
+    # 2-tailed z test
+    p <- (1 - pnorm(abs(z), 0, 1)) * 2
+    p
+    
+
+  # make data frame if there is more than one outcome category
+  if(outcome=="subtype.f") {
+    coef.dat = data.frame(coef=coef[,2], se=se[,2], p=p[,2], 
+                          outcome=as.character(paste(outcome)), 
+                          cov=as.character(paste(cov)),
+                          rown = rownames(coef))
+  } else {# for binary outcomes
+    coef.dat = data.frame(coef=coef[2], se=se[2], p=p[2], 
+                          outcome=as.character(paste(outcome)), 
+                          cov=paste(cov),
+                          rown = levels(df1[[outcome]])[2])
+  }
+    
+counts = table(df1[outcome])
+    
+  return(list(m1, coef.dat, name=paste0("Model: logit(", outcome, ") ~ ", cov), counts))
+  
+}
+
+get.m.log("subtype.f", "fe", pc.dat) # test
+
+
+```
+
+```{r}
+# function to print off the multinomial regression object
+
+show.m.log = function(outcome, cov, df1) {
+  
+  # outcome = 'subtype.f'; cov='fe'; df1=pc.dat # debug
+  # outcome = 'her2.rev'; cov='fe'; df1=pc.dat # debug
+  form1 = as.formula(paste(outcome, paste(c(cov, "c.age", "early.menop.45"), collapse=" + "), sep=" ~ "))
+  
+  return(list(form1,
+              summary(multinom(form1, data=df1)) ))
+# source: https://stats.idre.ucla.edu/r/dae/multinomial-logistic-regression/
+}
+
+```
+
+```{r}
+# get er, pr and her variables so they only include pos/neg and rest is set as NA
+pc.dat$er.rev = with(pc.dat, ifelse(er %in% c(1,2), er, NA))
+pc.dat$er.rev = factor(pc.dat$er.rev, labels=c("ER+", "ER-"))
+cts1 = table(pc.dat$er.rev) ; cts1# check
+
+pc.dat$pr.rev = with(pc.dat, ifelse(pr %in% c(1,2), pr, NA))
+pc.dat$pr.rev = factor(pc.dat$pr.rev, labels=c("PR+", "PR-")) # 1=pos, 2=neg
+#table(as_factor(pc.dat$FU_BC_DxPR_Result))
+cts2 = table(pc.dat$pr.rev); cts2
+
+pc.dat$her2.rev = with(pc.dat, ifelse(her2 %in% c(1,2), her2, NA)); table(pc.dat$her2.rev)
+pc.dat$her2.rev = factor(pc.dat$her2.rev, labels=c("HER+", "HER-"))
+cts3 = table(pc.dat$her2.rev); cts3
+
+cts4 = table(pc.dat$subtype.f); cts4
+
+```
+
+
+```{r}
+# run function across all subtype.f outcomes and iron covs
+
+# get variables ready for function
+iron.vars = c("fe", 'log.fertn', "fesat", "PC1")
+subs = c("subtype.f", "her2.rev", "pr.rev", "er.rev")
+combo.vars = expand.grid(subs, iron.vars)
+
+# run function over all variables
+get.estimates = mapply(get.m.log, 
+                       as.character(combo.vars[,1]), 
+                       as.character(combo.vars[,2]),  
+                       list(pc.dat), SIMPLIFY = FALSE)
+
+# source: https://stackoverflow.com/questions/19120189/extract-second-subelement-of-every-element-in-a-list-while-ignoring-nas-in-sapp
+
+
+model.info = sapply(get.estimates, function(x) x[1]) # extract 1st element of list, the model object
+
+coef.info = sapply(get.estimates, function(x) x[2]) # extract 2nd element of list, the coefficient info
+
+lnames = sapply(get.estimates, function(x) x[3]) # extract 3rd element of list, the outcome and cov names
+
+counts = sapply(get.estimates, function(x) x[4]) # extract 4th element of list, the outcome and cov names
+counts
+
+names(model.info) = lnames
+
+# source: https://stackoverflow.com/questions/2851327/convert-a-list-of-data-frames-into-one-data-frame
+coef.info.data = bind_rows(coef.info, .id = "column_label") # get warning about coercing factor to character
+coef.info.data
+
+coef.info.data$vals = with(coef.info.data, 
+                               paste0( round(coef,4), " (se = ", round(se,4),"), p-value= ", round(p, 4)))
+
+coef.info.data$vals2 = with(coef.info.data, 
+                               paste0( formatC(round(exp(coef),2), format="f", flag='0', digits=2),
+                                       " (",
+                                       formatC(round(exp(coef-1.96*se),2), format="f", flag='0', digits=2),
+                                       ", ",
+                                       formatC(round(exp(coef+1.96*se),2), format="f", flag='0', digits=2),
+                                       ")"))
+                                       
+coef.info.data
+
+```
+
+# Table
+
+```{r}
+
+# source: https://stackoverflow.com/questions/11608167/reshape-multiple-value-columns-to-wide-format
+wide.t9 =
+dcast(setDT(coef.info.data), 
+      outcome + rown ~ cov, value.var = c( "vals2"))
+
+wide.t9
+wide.t9$rown[1:3] = c("ER-",  "PR-", "HER2-")
+wide.t9
+
+counts = c(paste0(names(cts1), ' (n= ', cts1, ")", collapse=";"), 
+           paste0(names(cts2), " (n= ", cts2, ")", collapse=";"),
+           paste0(names(cts3), " (n= ", cts3, ")", collapse=";"),
+           paste0(cts4[2]),
+           paste0(cts4[3])); counts
+dim(wide.t9)
+wide.t9. = cbind(wide.t9, counts)
+wide.t9.
+
+# load in the in situ vs invasive analysis from section8-rev.Rmd
+load(file="../sections/k8.RData")  # wide.t8
+wide.t8
+wide.t8$rown=" "
+wide.t8 
+
+wide.t.both = data.frame(rbind(wide.t9., wide.t8))
+wide.t.both
+
+wide.t.both$outcome = c("ER", "HER2", "PR", "Combo", "Combo", " ")
+names(wide.t.both)
+
+# make table
+k9 = kable(
+  wide.t.both[,c('rown', 'counts', 'fe', 'fesat', 'log.fertn', 'PC1')],
+  booktabs=T,
+  caption = "Odds ratio (95\\% CI) of breast cancer subtypes* by iron biomarkers in case-only sample.",
+  col.names = c( "Index group", 'counts',  "FE", "FE sat", "log(fertn)", "PC1")) %>%
+  pack_rows("One hormone receptor subtype (negative vs positive)", 1, 3) %>%
+  pack_rows(paste0("Subtype combination (vs HR+/HER2-", ", n=", cts4[1], ")"), 4, 5) %>%
+  pack_rows("Invasive vs In Situ", 6, 6) %>%
+  row_spec(3, hline_after=T) %>%
+  row_spec(5, hline_after=T) %>%
+  footnote(symbol = "Adjusted for age at diagnosis and menopause status at baseline.") %>%
+  kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size=10) %>%
+  column_spec(1, width = "15em") %>%
+  column_spec(2:5, width="10em") %>%
+  add_header_above(c( " ", " ", "Iron biomarkers" = 4)) 
+# source: https://haozhu233.github.io/kableExtra/awesome_table_in_pdf.pdf
+
+save(k9, wide.t.both, cts4, file="../sections/k9.RData")
+
+
+```
+
+```{r, results='markup'}
+k9
+```
+
+
+
+#### Sample Interpretation
+
+- See [this link](https://stats.idre.ucla.edu/r/dae/multinomial-logistic-regression/) for a description of the package for multinomial logistic regression that I used from R.
+
+A one unit increase in the first principal component is associated with an change in the log odds of ER-/PR-/HER2- vs "ER+/HER2- or PR+/HER2-", the referent, of `r wide.t.both[4,6]`.
+
+
+
+## Models
+
+```{r}
+# source: https://stat.ethz.ch/pipermail/r-help/2014-October/422175.html
+```
+
+
+```{r, results='markup', comment=NA, eval=T}
+invisible(lapply(seq_along(model.info), function(i){ cat(sep="", "### ", names(model.info)[i], ":\n \n") ; print(summary(model.info[[i]])); cat("#################################### \n \n")}))
+
+```
+
+```{r, results='markup', comment=NA, eval=F}
+
+# run function over all variables to show each model run
+
+mapply(show.m.log,
+                 as.character(combo.vars[,1]), 
+                       as.character(combo.vars[,2]),  
+                       list(pc.dat), SIMPLIFY = FALSE)
+
+```
+

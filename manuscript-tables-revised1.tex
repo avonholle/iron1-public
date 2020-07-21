@@ -1,0 +1,968 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1.5cm]{geometry}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{chngcntr}
+
+
+ \usepackage{multirow}
+ \usepackage{wrapfig}
+ \usepackage{float}
+ 
+ 
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{lscape}
+\usepackage{array}
+\usepackage{rotating}
+\usepackage{multirow}
+
+\usepackage{babel}
+ 
+% \let\origfigure\figure
+% \let\endorigfigure\endfigure
+% \renewenvironment{figure}[1][2] {
+%     \expandafter\origfigure\expandafter[H]
+% } {
+%     \endorigfigure
+% }
+ 
+ \usepackage{colortbl}
+ \usepackage{tabu}
+ \usepackage{threeparttable}
+ \usepackage{threeparttablex}
+ \usepackage[normalem]{ulem}
+ \usepackage{makecell}
+ \floatplacement{figure}{H} % see https://stackoverflow.com/questions/42486617/knitr-ignoring-fig-pos
+ \usepackage{dcolumn}
+\usepackage{rotating}
+
+\usepackage{lscape}
+
+\usepackage{xcolor}
+\usepackage{adjustbox}
+\usepackage{hyperref}
+
+% Source: https://tex.stackexchange.com/questions/82993/how-to-change-the-name-of-document-elements-like-figure-contents-bibliogr
+%\renewcommand{\bibname}{References}
+
+\newcommand{\blandscape}{\begin{landscape}}
+\newcommand{\elandscape}{\end{landscape}}
+
+
+%https://stackoverflow.com/questions/51633434/prevent-pagebreak-in-kableextra-landscape-table
+\usepackage[graphicx]{realboxes}  
+
+\let\origfigure\figure
+\let\endorigfigure\endfigure
+\renewenvironment{figure}[1][2] {
+    \expandafter\origfigure\expandafter[H]
+} {
+    \endorigfigure
+}
+
+%https://stackoverflow.com/questions/16626462/figure-position-in-markdown-when-converting-to-pdf-with-knitr-and-pandoc
+
+
+% see https://tex.stackexchange.com/questions/63030/change-color-and-background-behind-text-of-all-description-environments
+
+
+\newenvironment{cdescription}{%
+  \begin{adjustbox}{minipage=\linewidth,bgcolor=blue,vspace=\smallskipamount}
+    \begin{description}
+      \color{red}%
+}{%
+    \end{description}
+  \end{adjustbox}
+}
+
+
+% Source: https://tex.stackexchange.com/questions/30757/change-the-word-chapter-to-something-else
+% uncomment if using for bookdown
+\usepackage{fancyhdr}
+% \makeatletter
+% \renewcommand{\@chapapp}{Section}
+% \makeatother
+
+
+% see http://tex.stackexchange.com/questions/184080/using-beamer-bullets-in-poster
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,decorations.markings,shapes}
+\tikzset{
+font={\fontsize{14pt}{16}\selectfont}}
+
+
+\tikzset{
+            gla/.style={
+          , line width=0.5mm, arrows={-Stealth[angle=45:12pt, scale=1, black, fill=black]}}}
+          
+\tikzset{
+            dgla/.style={
+          , line width=0.5mm, shorten >=1pt, arrows={Stealth-Stealth[angle=45:10pt, scale=1, black, fill=black]}}}
+
+\tikzset{
+    ultra thin/.style= {line width=0.1pt},
+    very thin/.style=  {line width=0.2pt},
+    thin/.style=       {line width=0.4pt},% thin is the default
+    rec/.style=        {shape=rectangle, line width=0.5mm, draw},% thin is the default
+    semithick/.style=  {line width=0.6pt},
+    thick/.style=      {line width=0.8pt},
+    very thick/.style= {line width=1.2pt},
+    ultra thick/.style={line width=1.6pt}
+}  
+
+% Source: https://latex.org/forum/viewtopic.php?t=15908
+\newcolumntype{C}[1]{>{\centering\arraybackslash}m{#1}}
+
+% NOTE: the following does not work
+% Source: https://tex.stackexchange.com/questions/249346/reduce-white-space-above-chapter-title-and-reduce-space-between-title-and-text/249370
+
+%%% Add this %%%
+% \usepackage{titlesec}
+% \titleformat{\chapter}[display]
+% {\normalfont\huge\bfseries}{\chaptertitlename~\thechapter}{20pt}{\Huge}
+% \titlespacing*{\chapter}{0pt}{50pt}{40pt}
+% \titlespacing*{name=\chapter,numberless}{0pt}{-30pt}{10pt}
+%%%   End   %%%
+
+
+
+\newcommand{\beginsupplement}{
+  \setcounter{table}{0}  
+  \renewcommand{\thetable}{S\arabic{table}} 
+  \setcounter{figure}{0} 
+  \renewcommand{\thefigure}{S\arabic{figure}}
+}
+
+% Source: https://stackoverflow.com/questions/52118202/change-line-spacing-for-rmd-abstract
+\usepackage{setspace}\doublespacing
+% https://github.com/rstudio/rmarkdown/issues/337
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+% https://github.com/rstudio/rmarkdown/pull/252
+\usepackage{titling}
+\setlength{\droptitle}{-2em}
+
+\pretitle{\vspace{\droptitle}\centering\huge}
+\posttitle{\par}
+
+\preauthor{\centering\large\emph}
+\postauthor{\par}
+
+\predate{\centering\large\emph}
+\postdate{\par}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+
+\date{}
+
+\begin{document}
+
+\singlespace
+
+\hypertarget{tables}{%
+\section{Tables}\label{tables}}
+
+\begin{longtable}[t]{llll}
+\caption{\label{tab:unnamed-chunk-4}Baseline characteristics of subcohort and cases of breast cancer}\\
+\toprule
+\multicolumn{2}{c}{ } & \multicolumn{2}{c}{Case-cohort} \\
+\cmidrule(l{3pt}r{3pt}){3-4}
+Variable & Total & Subcohort (no cases) & Cases\\
+\midrule
+n & 50884 & 2952 & 2974\\
+Baseline age (years) & 56 [49, 62] & 55 [49, 62] & 57 [50, 64]\\
+BMI (kg/m$^2$) & 27 [23, 31] & 27 [23, 31] & 27 [24, 31]\\
+Waist circumference (in) & 33 [30, 38] & 33 [30, 37] & 34 [30, 38]\\
+Height (cm) & 65 [63, 66] & 64 [63, 66] & 65 [63, 66]\\
+Age at menarche (years) & 13 [12, 13] & 13 [12, 13] & 13 [12, 13]\\
+Time since menopause (years) & 4 [0, 12] & 4 [0, 12] & 6 [0, 13]\\
+Iron (mcg/dL) &  & 92 [73, 115] & 93 [75, 116]\\
+Ferritin (mcg/dL) &  & 67 [36, 112] & 70 [38, 116]\\
+Iron saturation (\%) &  & 28 [22, 36] & 29 [22, 36]\\
+TIBC &  & 328 [300, 360] & 328 [299, 360]\\
+UIBC &  & 231 [197, 269] & 231 [196, 269]\\
+Baseline menopause status &  &  & \\
+\hspace{1em}No menopause & 17892 (35) & 1055 (36) & 932 (31)\\
+\hspace{1em}age<=45 years & 5952 (12) & 343 (12) & 280 (9)\\
+\hspace{1em}age>45 years & 27040 (53) & 1554 (53) & 1762 (59)\\
+Smoking status &  &  & \\
+\hspace{1em}Never & 28271 (56) & 1609 (55) & 1593 (54)\\
+\hspace{1em}Former & 19860 (39) & 1185 (40) & 1259 (43)\\
+\hspace{1em}Current & 2487 (5) & 141 (5) & 110 (4)\\
+Alcohol status &  &  & \\
+\hspace{1em}Never & 1565 (3) & 74 (3) & 103 (4)\\
+\hspace{1em}Past & 9751 (20) & 573 (20) & 472 (16)\\
+\hspace{1em}Current & 36879 (77) & 2157 (77) & 2305 (80)\\
+Education &  &  & \\
+\hspace{1em}<HS degree & 627 (1) & 34 (1) & 30 (1)\\
+\hspace{1em}Completed HS & 7177 (14) & 455 (15) & 397 (13)\\
+\hspace{1em}Some college, no degree & 9957 (20) & 573 (19) & 534 (18)\\
+\hspace{1em}Associate or technical degree & 7224 (14) & 420 (14) & 405 (14)\\
+\hspace{1em}Bachelor's degree & 13714 (27) & 776 (26) & 826 (28)\\
+\hspace{1em}Graduate level degree & 12170 (24) & 694 (24) & 781 (26)\\
+Hormone replacement therapy (ever Yes/No) & 29275 (63) & 1659 (61) & 1736 (64)\\
+Birth control (ever Yes/No) & 43118 (85) & 2515 (86) & 2491 (84)\\
+Age at first birth (years) &  &  & \\
+no birth & 9293 (18) & 551 (19) & 547 (18)\\
+\hspace{1em}<20 & 9791 (19) & 575 (19) & 540 (18)\\
+\hspace{1em}>20-24 & 12808 (25) & 751 (25) & 759 (26)\\
+\hspace{1em}>24-29 & 11571 (23) & 675 (23) & 662 (22)\\
+\hspace{1em}>29-55 & 7421 (15) & 400 (14) & 466 (16)\\
+\hspace{1em}Race/ethnicity &  &  & \\
+\hspace{1em}Non-Hispanic White & 42558 (84) & 2463 (83) & 2554 (86)\\
+\hspace{1em}Non-Hispanic Black & 4462 (9) & 266 (9) & 222 (7)\\
+\hspace{1em}Hispanic & 2515 (5) & 144 (5) & 113 (4)\\
+\hspace{1em}Other & 1334 (3) & 79 (3) & 84 (3)\\
+BMI categories (kg/m$^2$) &  &  & \\
+\hspace{1em}< 18.5 & 563 (1) & 25 (1) & 26 (1)\\
+\hspace{1em}18.5-24.9 & 18875 (37) & 1111 (38) & 1056 (36)\\
+\hspace{1em}25.0-29.9 & 16149 (32) & 934 (32) & 953 (32)\\
+\hspace{1em}30.0-34.9 & 8800 (17) & 509 (17) & 551 (19)\\
+\hspace{1em}35.0-39.9 & 3958 (8) & 230 (8) & 232 (8)\\
+\hspace{1em}40.0 + & 2519 (5) & 140 (5) & 156 (5)\\
+\bottomrule
+\end{longtable}
+
+\clearpage
+\newpage
+
+\begin{table}[H]
+
+\caption{\label{tab:unnamed-chunk-5}Breast cancer risk associated with increasing levels of iron-related biomarkers, Sister Study case-cohort sample.}
+\centering
+\begin{threeparttable}
+\resizebox{\linewidth}{!}{
+\fontsize{10}{12}\selectfont
+\begin{tabular}[t]{lllll>{\centering\arraybackslash}p{4cm}}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{4}{c}{Quartile of iron-related biomarker} & \multicolumn{1}{c}{Linear trend over quartiles$^c$} \\
+\cmidrule(l{3pt}r{3pt}){2-5} \cmidrule(l{3pt}r{3pt}){6-6}
+Biomarkers & Quartile 1 & Quartile 2 & Quartile 3 & Quartile 4 &  \\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Iron ($\mu$g/dL)}}\\
+\hspace{1em}Median & 63 & 85 & 103 & 133 & \\
+\hspace{1em}Ranges & [5,74] & (74,93] & (93,115] & (115,340] & \\
+\hspace{1em}Unadjusted & ref & 1.15 (0.99, 1.33) & 1.08 (0.93, 1.25) & 1.14 (0.98, 1.32) & 1.03 (0.99, 1.08)\\
+\hspace{1em}Adjusted$^a$ & ref & 1.07 (0.91, 1.26) & 1.08 (0.92, 1.27) & 1.06 (0.90, 1.25) & 1.02 (0.97, 1.07)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Ferritin$^b$ ($\mu$g/dL)}}\\
+\hspace{1em}Median & 22 & 50 & 88 & 157 & \\
+\hspace{1em}Ranges & [5,36.25] & (36.25,67] & (67,113] & (113,1625] & \\
+\hspace{1em}Unadjusted & ref & 1.05 (0.90, 1.21) & 1.09 (0.93, 1.26) & 1.06 (0.91, 1.23) & 1.02 (0.97, 1.07)\\
+\hspace{1em}Adjusted$^a$ & ref & 0.99 (0.84, 1.17) & 1.05 (0.89, 1.24) & 1.03 (0.87, 1.23) & 1.02 (0.96, 1.07)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Transferrin saturation (\%)}}\\
+\hspace{1em}Median & 19 & 26 & 33 & 42 & \\
+\hspace{1em}Ranges & [2,22] & (22,29] & (29,36] & (36,90] & \\
+\hspace{1em}Unadjusted & ref & 1.01 (0.88, 1.17) & 1.10 (0.95, 1.28) & 1.02 (0.88, 1.19) & 1.02 (0.97, 1.06)\\
+\hspace{1em}Adjusted$^a$ & ref & 0.92 (0.78, 1.07) & 1.06 (0.89, 1.25) & 0.94 (0.80, 1.12) & 1.00 (0.95, 1.05)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{First principal component$^d$}}\\
+\hspace{1em}Median & -1.5 & -0.3 & 0.5 & 1.5 & \\
+\hspace{1em}Ranges & [-9.9,-0.799] & (-0.799,0.147] & (0.147,0.976] & (0.976,5.12] & \\
+\hspace{1em}Unadjusted & ref & 1.18 (1.02, 1.37) & 1.11 (0.95, 1.28) & 1.11 (0.96, 1.29) & 1.03 (0.98, 1.07)\\
+\hspace{1em}Adjusted$^a$ & ref & 1.12 (0.95, 1.32) & 1.04 (0.88, 1.23) & 1.06 (0.90, 1.25) & 1.01 (0.96, 1.06)\\
+\bottomrule
+\end{tabular}}
+\begin{tablenotes}
+\item[a] Adjusted for  baseline smoking, alcohol, education,  HRT, age at menarche, age at first birth, oral contraceptive use, menopause status, BMI, and a product term between the last two variables.
+\item[b] log transformed
+\item[c] Iron covariate in quartile units
+\item[d] The first principal component explains 72\% of the variance and represents loadings of 0.63, 0.40, and 0.66 for the iron, ferritin and transferrin saturation measures, respectively.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\hypertarget{supplement}{%
+\section{Supplement}\label{supplement}}
+
+\hypertarget{refs}{}
+
+\beginsupplement
+
+\begin{table}[H]
+
+\caption{\label{tab:unnamed-chunk-13}Breast cancer hazard ratios by serum iron covariate (restricted to first four years of follow-up)}
+\centering
+\begin{threeparttable}
+\resizebox{\linewidth}{!}{
+\fontsize{10}{12}\selectfont
+\begin{tabular}[t]{lllll>{\centering\arraybackslash}p{4cm}}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{4}{c}{Quartile of iron-related biomarker} & \multicolumn{1}{c}{Linear trend over quartiles$^c$} \\
+\cmidrule(l{3pt}r{3pt}){2-5} \cmidrule(l{3pt}r{3pt}){6-6}
+Biomarkers & Quartile 1 & Quartile 2 & Quartile 3 & Quartile 4 &  \\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Iron ($\mu$g/dL)}}\\
+\hspace{1em}Median & 63 & 85 & 103 & 133 & \\
+\hspace{1em}Ranges & [5,74] & (74,93] & (93,115] & (115,340] & \\
+\hspace{1em}Unadjusted & ref & 1.00 (0.83, 1.21) & 1.02 (0.85, 1.24) & 1.08 (0.90, 1.31) & 1.03 (0.97, 1.09)\\
+\hspace{1em}Adjusted$^a$ & ref & 0.98 (0.80, 1.21) & 1.04 (0.84, 1.28) & 1.03 (0.84, 1.27) & 1.01 (0.95, 1.08)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Ferritin$^b$ ($\mu$g/dL)}}\\
+\hspace{1em}Median & 21 & 50 & 87 & 157 & \\
+\hspace{1em}Ranges & [5,36] & (36,67] & (67,113] & (113,1625] & \\
+\hspace{1em}Unadjusted & ref & 0.93 (0.77, 1.13) & 0.95 (0.78, 1.15) & 1.02 (0.84, 1.24) & 1.01 (0.95, 1.08)\\
+\hspace{1em}Adjusted$^a$ & ref & 0.94 (0.76, 1.16) & 0.99 (0.80, 1.22) & 1.01 (0.81, 1.25) & 1.01 (0.94, 1.08)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Transferrin saturation (\%)}}\\
+\hspace{1em}Median & 19 & 27 & 33 & 42 & \\
+\hspace{1em}Ranges & [2,23] & (23,29] & (29,36] & (36,90] & \\
+\hspace{1em}Unadjusted & ref & 1.01 (0.84, 1.22) & 1.07 (0.88, 1.28) & 1.03 (0.86, 1.24) & 1.02 (0.96, 1.08)\\
+\hspace{1em}Adjusted$^a$ & ref & 0.96 (0.78, 1.17) & 1.08 (0.88, 1.33) & 0.94 (0.77, 1.16) & 1.00 (0.93, 1.06)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{First principal component$^d$}}\\
+\hspace{1em}Median & -1.5 & -0.3 & 0.6 & 1.5 & \\
+\hspace{1em}Ranges & [-9.82,-0.786] & (-0.786,0.156] & (0.156,0.977] & (0.977,5.11] & \\
+\hspace{1em}Unadjusted & ref & 1.06 (0.87, 1.28) & 1.08 (0.89, 1.31) & 1.08 (0.89, 1.31) & 1.03 (0.97, 1.09)\\
+\hspace{1em}Adjusted$^a$ & ref & 1.02 (0.83, 1.26) & 1.04 (0.85, 1.29) & 1.00 (0.81, 1.24) & 1.00 (0.94, 1.07)\\
+\bottomrule
+\end{tabular}}
+\begin{tablenotes}
+\item[a] Adjusted for  baseline smoking, alcohol, education,  HRT, age at menarche, age at first birth, oral contraceptive use, menopause status, BMI, and a product term between the last two variables.
+\item[b] log transformed
+\item[c] Iron covariate in quartile units
+\item[d] The first principal component explains 72\% of the variance and represents loadings of 0.63, 0.40, and 0.66 for the iron, ferritin and transferrin saturation measures, respectively.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\begin{table}[H]
+
+\caption{\label{tab:unnamed-chunk-13}Breast cancer hazard ratios by serum iron covariate (omitting first two years of follow-up)}
+\centering
+\begin{threeparttable}
+\resizebox{\linewidth}{!}{
+\fontsize{10}{12}\selectfont
+\begin{tabular}[t]{lllll>{\centering\arraybackslash}p{4cm}}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{4}{c}{Quartile of iron-related biomarker} & \multicolumn{1}{c}{Linear trend over quartiles$^c$} \\
+\cmidrule(l{3pt}r{3pt}){2-5} \cmidrule(l{3pt}r{3pt}){6-6}
+Biomarkers & Quartile 1 & Quartile 2 & Quartile 3 & Quartile 4 &  \\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Iron ($\mu$g/dL)}}\\
+\hspace{1em}Median & 63 & 84 & 103 & 133 & \\
+\hspace{1em}Ranges & [5,74] & (74,93] & (93,115] & (115,340] & \\
+\hspace{1em}Unadjusted & ref & 1.12 (0.96, 1.31) & 1.11 (0.95, 1.31) & 1.09 (0.93, 1.28) & 1.02 (0.97, 1.08)\\
+\hspace{1em}Adjusted$^a$ & ref & 1.14 (0.95, 1.35) & 1.16 (0.97, 1.38) & 1.10 (0.92, 1.32) & 1.03 (0.97, 1.09)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Ferritin$^b$ ($\mu$g/dL)}}\\
+\hspace{1em}Median & 22 & 51 & 88 & 156 & \\
+\hspace{1em}Ranges & [5,36] & (36,67] & (67,113] & (113,1404] & \\
+\hspace{1em}Unadjusted & ref & 1.00 (0.85, 1.17) & 1.06 (0.90, 1.25) & 1.11 (0.94, 1.31) & 1.04 (0.99, 1.09)\\
+\hspace{1em}Adjusted$^a$ & ref & 1.00 (0.83, 1.19) & 1.07 (0.89, 1.28) & 1.07 (0.89, 1.29) & 1.03 (0.97, 1.09)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Transferrin saturation (\%)}}\\
+\hspace{1em}Median & 19 & 26 & 33 & 42 & \\
+\hspace{1em}Ranges & [2,22] & (22,29] & (29,36] & (36,87] & \\
+\hspace{1em}Unadjusted & ref & 0.97 (0.83, 1.13) & 1.05 (0.90, 1.24) & 0.99 (0.84, 1.17) & 1.01 (0.96, 1.06)\\
+\hspace{1em}Adjusted$^a$ & ref & 0.94 (0.79, 1.11) & 1.10 (0.92, 1.31) & 0.98 (0.82, 1.17) & 1.01 (0.95, 1.07)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{First principal component$^d$}}\\
+\hspace{1em}Median & -1.5 & -0.3 & 0.6 & 1.5 & \\
+\hspace{1em}Ranges & [-9.93,-0.799] & (-0.799,0.146] & (0.146,0.979] & (0.979,5.13] & \\
+\hspace{1em}Unadjusted & ref & 1.14 (0.97, 1.33) & 1.06 (0.90, 1.24) & 1.10 (0.93, 1.29) & 1.02 (0.97, 1.07)\\
+\hspace{1em}Adjusted$^a$ & ref & 1.18 (0.99, 1.40) & 1.04 (0.88, 1.25) & 1.11 (0.93, 1.33) & 1.02 (0.96, 1.08)\\
+\bottomrule
+\end{tabular}}
+\begin{tablenotes}
+\item[a] Adjusted for  baseline smoking, alcohol, education,  HRT, age at menarche, age at first birth, oral contraceptive use, menopause status, BMI, and a product term between the last two variables.
+\item[b] log transformed
+\item[c] Iron covariate in quartile units
+\item[d] The first principal component explains 72\% of the variance and represents loadings of 0.63, 0.40, and 0.66 for the iron, ferritin and transferrin saturation measures, respectively.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\clearpage
+\newpage
+
+\begin{table}[H]
+
+\caption{\label{tab:unnamed-chunk-16}Breast cancer hazard ratios by serum iron covariate and race/ethnic subgroups.}
+\centering
+\resizebox{\linewidth}{!}{
+\fontsize{10}{12}\selectfont
+\begin{threeparttable}
+\begin{tabular}[t]{l>{\raggedright\arraybackslash}p{3cm}lllll>{\centering\arraybackslash}p{4cm}}
+\toprule
+\multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{4}{c}{Quartile of iron-related biomarker} & \multicolumn{1}{c}{Linear trend over quartiles$^c$} \\
+\cmidrule(l{3pt}r{3pt}){4-7} \cmidrule(l{3pt}r{3pt}){8-8}
+Iron & Race/ethnicity & Values & ref & Q2 & Q3 & Q4 & \\
+\midrule
+ &  & Median & 55 & 72 & 87 & 108 & \\
+\cmidrule{3-8}
+ &  & Ranges & [20,66] & (66,79] & (79,96.2] & (96.2,236] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.00 (0.58, 1.73) & 0.90 (0.53, 1.56) & 1.08 (0.63, 1.86) & 1.02 (0.86, 1.21)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Black, non-Hispanic (n=470, subcohort n=262)} & Adjusted$^a$ HR (95\% CI) & ref & 1.01 (0.58, 1.76) & 0.92 (0.53, 1.59) & 1.09 (0.63, 1.91) & 1.02 (0.85, 1.21)\\
+\cmidrule{2-8}
+ &  & Median & 66 & 85 & 102 & 136 & \\
+\cmidrule{3-8}
+ &  & Ranges & [21,74] & (74,92] & (92,114] & (114,223] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.03 (0.48, 2.22) & 0.58 (0.26, 1.27) & 0.80 (0.38, 1.68) & 0.88 (0.70, 1.12)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Hispanic (n=236, subcohort n=135)} & Adjusted$^a$ HR (95\% CI) & ref & 1.01 (0.46, 2.20) & 0.58 (0.26, 1.30) & 0.79 (0.37, 1.69) & 0.89 (0.69, 1.14)\\
+\cmidrule{2-8}
+ &  & Median & 64 & 86 & 105 & 134 & \\
+\cmidrule{3-8}
+ &  & Ranges & [5,76] & (76,94] & (94,117] & (117,340] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.13 (0.96, 1.33) & 1.09 (0.93, 1.28) & 1.13 (0.96, 1.32) & 1.03 (0.98, 1.09)\\
+\cmidrule{3-8}
+\multirow{-12}{*}{\raggedright\arraybackslash Iron ($\mu$g/dL)} & \multirow{-4}{3cm}{\raggedright\arraybackslash White, non-Hispanic (n=4881, subcohort n=2487)} & Adjusted$^a$ HR (95\% CI) & ref & 1.13 (0.96, 1.33) & 1.11 (0.94, 1.30) & 1.16 (0.98, 1.36) & 1.04 (0.99, 1.10)\\
+\cmidrule{1-8}
+ &  & Median & 19 & 56 & 102 & 189 & \\
+\cmidrule{3-8}
+ &  & Ranges & [5,38] & (38,82] & (82,134.2] & (134.2,832] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.03 (0.60, 1.80) & 1.17 (0.67, 2.02) & 1.16 (0.66, 2.02) & 1.06 (0.88, 1.26)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Black, non-Hispanic (n=470, subcohort n=262)} & Adjusted$^a$ HR (95\% CI) & ref & 1.06 (0.60, 1.87) & 1.16 (0.65, 2.06) & 1.17 (0.66, 2.06) & 1.06 (0.88, 1.26)\\
+\cmidrule{2-8}
+ &  & Median & 22 & 55 & 88 & 170 & \\
+\cmidrule{3-8}
+ &  & Ranges & [5,39] & (39,75] & (75,119.8] & (119.8,573] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 0.51 (0.23, 1.12) & 0.41 (0.18, 0.95) & 0.90 (0.40, 2.05) & 0.98 (0.75, 1.29)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Hispanic (n=236, subcohort n=135)} & Adjusted$^a$ HR (95\% CI) & ref & 0.52 (0.22, 1.21) & 0.38 (0.16, 0.92) & 0.85 (0.36, 1.99) & 0.96 (0.73, 1.27)\\
+\cmidrule{2-8}
+ &  & Median & 22 & 50 & 86 & 152 & \\
+\cmidrule{3-8}
+ &  & Ranges & [5,36] & (36,66] & (66,111] & (111,1625] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.08 (0.92, 1.27) & 1.11 (0.94, 1.30) & 1.07 (0.91, 1.27) & 1.02 (0.97, 1.08)\\
+\cmidrule{3-8}
+\multirow{-12}{*}{\raggedright\arraybackslash Ferritin$^b$ ($\mu$g/dL)} & \multirow{-4}{3cm}{\raggedright\arraybackslash White, non-Hispanic (n=4881, subcohort n=2487)} & Adjusted$^a$ HR (95\% CI) & ref & 1.09 (0.92, 1.28) & 1.11 (0.94, 1.31) & 1.05 (0.89, 1.24) & 1.02 (0.96, 1.07)\\
+\cmidrule{1-8}
+ &  & Median & 17 & 23 & 28 & 36 & \\
+\cmidrule{3-8}
+ &  & Ranges & [5,21] & (21,25] & (25,31] & (31,64] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.04 (0.60, 1.81) & 1.04 (0.62, 1.75) & 0.94 (0.55, 1.59) & 0.98 (0.83, 1.16)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Black, non-Hispanic (n=470, subcohort n=262)} & Adjusted$^a$ HR (95\% CI) & ref & 1.05 (0.60, 1.84) & 1.04 (0.62, 1.75) & 0.93 (0.54, 1.60) & 0.98 (0.83, 1.16)\\
+\cmidrule{2-8}
+ &  & Median & 20 & 26 & 32 & 42 & \\
+\cmidrule{3-8}
+ &  & Ranges & [5,23.2] & (23.2,29] & (29,35] & (35,66] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 0.84 (0.39, 1.80) & 0.87 (0.40, 1.87) & 0.62 (0.29, 1.33) & 0.87 (0.68, 1.11)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Hispanic (n=236, subcohort n=135)} & Adjusted$^a$ HR (95\% CI) & ref & 0.81 (0.37, 1.77) & 0.83 (0.37, 1.84) & 0.61 (0.28, 1.36) & 0.87 (0.68, 1.11)\\
+\cmidrule{2-8}
+ &  & Median & 19 & 27 & 33 & 42 & \\
+\cmidrule{3-8}
+ &  & Ranges & [2,23] & (23,29] & (29,36] & (36,90] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.07 (0.91, 1.25) & 1.15 (0.98, 1.35) & 1.05 (0.90, 1.22) & 1.02 (0.97, 1.07)\\
+\cmidrule{3-8}
+\multirow{-12}{*}{\raggedright\arraybackslash Transferrin Saturation (\%)} & \multirow{-4}{3cm}{\raggedright\arraybackslash White, non-Hispanic (n=4881, subcohort n=2487)} & Adjusted$^a$ HR (95\% CI) & ref & 1.07 (0.91, 1.26) & 1.17 (1.00, 1.38) & 1.08 (0.92, 1.27) & 1.03 (0.98, 1.09)\\
+\cmidrule{1-8}
+ &  & Median & -2 & -1 & 0 & 1 & \\
+\cmidrule{3-8}
+ &  & Ranges & [-6.89,-1.08] & (-1.08,-0.243] & (-0.243,0.467] & (0.467,3.39] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.04 (0.60, 1.81) & 1.23 (0.71, 2.11) & 0.92 (0.53, 1.60) & 0.99 (0.83, 1.18)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Black, non-Hispanic (n=470, subcohort n=262)} & Adjusted$^a$ HR (95\% CI) & ref & 1.04 (0.60, 1.82) & 1.24 (0.71, 2.14) & 0.91 (0.52, 1.60) & 0.99 (0.83, 1.18)\\
+\cmidrule{2-8}
+ &  & Median & -1 & -0 & 1 & 2 & \\
+\cmidrule{3-8}
+ &  & Ranges & [-6.64,-0.727] & (-0.727,0.204] & (0.204,1.04] & (1.04,2.99] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.10 (0.51, 2.38) & 0.71 (0.33, 1.55) & 0.69 (0.32, 1.48) & 0.86 (0.67, 1.09)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Hispanic (n=236, subcohort n=135)} & Adjusted$^a$ HR (95\% CI) & ref & 1.05 (0.48, 2.32) & 0.72 (0.33, 1.58) & 0.69 (0.32, 1.50) & 0.86 (0.67, 1.10)\\
+\cmidrule{2-8}
+ &  & Median & -2 & -0 & 1 & 2 & \\
+\cmidrule{3-8}
+ &  & Ranges & [-9.9,-0.765] & (-0.765,0.192] & (0.192,1.02] & (1.02,5.12] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.17 (1.00, 1.38) & 1.14 (0.97, 1.34) & 1.13 (0.97, 1.33) & 1.04 (0.98, 1.09)\\
+\cmidrule{3-8}
+\multirow{-12}{*}{\raggedright\arraybackslash First principal component} & \multirow{-4}{3cm}{\raggedright\arraybackslash White, non-Hispanic (n=4881, subcohort n=2487)} & Adjusted$^a$ HR (95\% CI) & ref & 1.17 (0.99, 1.37) & 1.15 (0.97, 1.35) & 1.16 (0.98, 1.36) & 1.04 (0.99, 1.10)\\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item[a] Adjusted for BMI, baseline menopause status, and a product term of these two variables. Number of adjusted factors is small due to small sample size for some groups.
+\item[b] log transformed
+\item[c] Iron covariate in quartile units
+\end{tablenotes}
+\end{threeparttable}}
+\end{table}
+
+\clearpage
+\newpage
+
+\vspace{-1em}
+
+\begin{table}[H]
+
+\caption{\label{tab:unnamed-chunk-18}Breast cancer hazard ratios by serum iron covariate and BMI subgroups}
+\centering
+\resizebox{\linewidth}{!}{
+\fontsize{10}{12}\selectfont
+\begin{threeparttable}
+\begin{tabular}[t]{l>{\raggedright\arraybackslash}p{3cm}lllll>{\centering\arraybackslash}p{4cm}}
+\toprule
+\multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{4}{c}{Quartile of iron-related biomarker} & \multicolumn{1}{c}{Linear trend over quartiles$^c$} \\
+\cmidrule(l{3pt}r{3pt}){4-7} \cmidrule(l{3pt}r{3pt}){8-8}
+Iron & BMI groups & Values & ref & Q2 & Q3 & Q4 & \\
+\midrule
+ &  & Median & 66 & 90 & 111 & 142 & \\
+\cmidrule{3-8}
+ &  & Ranges & [5,79] & (79,100] & (100,125] & (125,340] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.02 (0.80, 1.30) & 0.94 (0.73, 1.20) & 1.07 (0.83, 1.36) & 1.01 (0.94, 1.09)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Normal: 18.5-24.9 (n=2094, subcohort n=1105)} & Adjusted$^a$ HR (95\% CI) & ref & 0.94 (0.72, 1.23) & 0.90 (0.69, 1.17) & 1.02 (0.78, 1.33) & 1.00 (0.92, 1.09)\\
+\cmidrule{2-8}
+ &  & Median & 64 & 86 & 104 & 133 & \\
+\cmidrule{3-8}
+ &  & Ranges & [21,76] & (76,94] & (94,114] & (114,332] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 0.84 (0.65, 1.10) & 1.02 (0.78, 1.33) & 0.92 (0.70, 1.20) & 0.99 (0.91, 1.08)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Overweight: 25.0-29.9 (n=1839, subcohort n=942)} & Adjusted$^a$ HR (95\% CI) & ref & 0.82 (0.61, 1.10) & 0.99 (0.74, 1.32) & 0.81 (0.60, 1.09) & 0.96 (0.87, 1.05)\\
+\cmidrule{2-8}
+ &  & Median & 60 & 78 & 94 & 121 & \\
+\cmidrule{3-8}
+ &  & Ranges & [14,69] & (69,85] & (85,103] & (103,276] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.47 (1.11, 1.93) & 1.27 (0.97, 1.68) & 1.27 (0.96, 1.67) & 1.06 (0.97, 1.15)\\
+\cmidrule{3-8}
+\multirow{-12}{*}{\raggedright\arraybackslash Iron$^b$ ($\mu$g/dL)} & \multirow{-4}{3cm}{\raggedright\arraybackslash Obese: 30+ (n=1760, subcohort n=889)} & Adjusted$^a$ HR (95\% CI) & ref & 1.47 (1.08, 1.99) & 1.34 (0.98, 1.82) & 1.37 (1.01, 1.86) & 1.08 (0.98, 1.19)\\
+\cmidrule{1-8}
+ &  & Median & 22 & 47 & 77 & 135 & \\
+\cmidrule{3-8}
+ &  & Ranges & [5,34] & (34,61] & (61,97] & (97,1625] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 0.96 (0.75, 1.24) & 1.02 (0.79, 1.32) & 1.06 (0.82, 1.37) & 1.02 (0.94, 1.11)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Normal: 18.5-24.9 (n=2094, subcohort n=1105)} & Adjusted$^a$ HR (95\% CI) & ref & 0.86 (0.65, 1.12) & 0.93 (0.70, 1.23) & 0.99 (0.75, 1.32) & 1.01 (0.92, 1.11)\\
+\cmidrule{2-8}
+ &  & Median & 22 & 53 & 90 & 152 & \\
+\cmidrule{3-8}
+ &  & Ranges & [5,37] & (37,70] & (70,114] & (114,1160] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 0.93 (0.71, 1.21) & 1.03 (0.79, 1.35) & 1.00 (0.76, 1.32) & 1.01 (0.93, 1.10)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Overweight: 25.0-29.9 (n=1839, subcohort n=942)} & Adjusted$^a$ HR (95\% CI) & ref & 0.96 (0.71, 1.29) & 1.18 (0.87, 1.60) & 1.06 (0.78, 1.44) & 1.04 (0.94, 1.14)\\
+\cmidrule{2-8}
+ &  & Median & 22 & 59 & 102 & 185 & \\
+\cmidrule{3-8}
+ &  & Ranges & [5,40] & (40,78.5] & (78.5,133] & (133,1404] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.27 (0.97, 1.67) & 1.15 (0.88, 1.52) & 1.30 (0.98, 1.72) & 1.07 (0.98, 1.17)\\
+\cmidrule{3-8}
+\multirow{-12}{*}{\raggedright\arraybackslash Ferritin$^b$ ($\mu$g/dL)} & \multirow{-4}{3cm}{\raggedright\arraybackslash Obese: 30+ (n=1760, subcohort n=889)} & Adjusted$^a$ HR (95\% CI) & ref & 1.22 (0.90, 1.65) & 1.13 (0.83, 1.54) & 1.20 (0.88, 1.65) & 1.05 (0.95, 1.16)\\
+\cmidrule{1-8}
+ &  & Median & 20 & 28 & 35 & 45 & \\
+\cmidrule{3-8}
+ &  & Ranges & [2,24] & (24,31] & (31,39] & (39,90] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.20 (0.94, 1.54) & 1.03 (0.81, 1.31) & 1.17 (0.92, 1.50) & 1.03 (0.96, 1.12)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Normal: 18.5-24.9 (n=2094, subcohort n=1105)} & Adjusted$^a$ HR (95\% CI) & ref & 1.07 (0.82, 1.39) & 0.93 (0.72, 1.21) & 1.07 (0.82, 1.40) & 1.01 (0.93, 1.10)\\
+\cmidrule{2-8}
+ &  & Median & 20 & 26 & 33 & 42 & \\
+\cmidrule{3-8}
+ &  & Ranges & [5,23] & (23,29] & (29,36] & (36,87] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 0.82 (0.64, 1.07) & 1.07 (0.82, 1.39) & 0.91 (0.70, 1.19) & 1.00 (0.92, 1.09)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Overweight: 25.0-29.9 (n=1839, subcohort n=942)} & Adjusted$^a$ HR (95\% CI) & ref & 0.76 (0.57, 1.01) & 1.01 (0.76, 1.35) & 0.81 (0.60, 1.09) & 0.97 (0.88, 1.06)\\
+\cmidrule{2-8}
+ &  & Median & 18 & 24 & 29 & 38 & \\
+\cmidrule{3-8}
+ &  & Ranges & [3,21] & (21,26] & (26,32] & (32,80] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.03 (0.78, 1.35) & 1.10 (0.84, 1.43) & 1.16 (0.88, 1.53) & 1.05 (0.96, 1.15)\\
+\cmidrule{3-8}
+\multirow{-12}{*}{\raggedright\arraybackslash Transferrin Saturation (\%)} & \multirow{-4}{3cm}{\raggedright\arraybackslash Obese: 30+ (n=1760, subcohort n=889)} & Adjusted$^a$ HR (95\% CI) & ref & 0.94 (0.70, 1.28) & 1.13 (0.84, 1.53) & 1.18 (0.87, 1.60) & 1.07 (0.97, 1.18)\\
+\cmidrule{1-8}
+ &  & Median & -1 & -0 & 1 & 2 & \\
+\cmidrule{3-8}
+ &  & Ranges & [-9.9,-0.588] & (-0.588,0.371] & (0.371,1.23] & (1.23,4.65] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.25 (0.98, 1.60) & 0.95 (0.74, 1.22) & 1.16 (0.90, 1.48) & 1.02 (0.94, 1.10)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Normal: 18.5-24.9 (n=2094, subcohort n=1105)} & Adjusted$^a$ HR (95\% CI) & ref & 1.36 (1.04, 1.78) & 0.92 (0.70, 1.20) & 1.15 (0.88, 1.50) & 1.00 (0.92, 1.09)\\
+\cmidrule{2-8}
+ &  & Median & -1 & -0 & 1 & 2 & \\
+\cmidrule{3-8}
+ &  & Ranges & [-6.71,-0.75] & (-0.75,0.193] & (0.193,0.965] & (0.965,4.87] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 0.84 (0.64, 1.10) & 1.03 (0.79, 1.35) & 0.96 (0.73, 1.25) & 1.01 (0.93, 1.10)\\
+\cmidrule{3-8}
+ & \multirow{-4}{3cm}{\raggedright\arraybackslash Overweight: 25.0-29.9 (n=1839, subcohort n=942)} & Adjusted$^a$ HR (95\% CI) & ref & 0.89 (0.66, 1.20) & 0.98 (0.73, 1.31) & 0.91 (0.68, 1.23) & 0.98 (0.89, 1.08)\\
+\cmidrule{2-8}
+ &  & Median & -2 & -1 & 0 & 1 & \\
+\cmidrule{3-8}
+ &  & Ranges & [-8.26,-1.02] & (-1.02,-0.098] & (-0.098,0.644] & (0.644,5.12] & \\
+\cmidrule{3-8}
+ &  & Unadjusted HR (95\% CI) & ref & 1.21 (0.92, 1.59) & 1.13 (0.86, 1.49) & 1.26 (0.96, 1.66) & 1.06 (0.97, 1.16)\\
+\cmidrule{3-8}
+\multirow{-12}{*}{\raggedright\arraybackslash First principal component} & \multirow{-4}{3cm}{\raggedright\arraybackslash Obese: 30+ (n=1760, subcohort n=889)} & Adjusted$^a$ HR (95\% CI) & ref & 1.11 (0.82, 1.52) & 1.16 (0.85, 1.58) & 1.24 (0.91, 1.68) & 1.07 (0.97, 1.18)\\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item[a] Adjusted for baseline smoking, alcohol, education, HRT, age at menarche, age at first birth, oral contraceptive use, and menopause status.
+\item[b] log transformed
+\item[c] Iron covariate in quartile units
+\end{tablenotes}
+\end{threeparttable}}
+\end{table}
+
+\clearpage
+\newpage
+
+\clearpage
+\newpage
+
+\begin{table}[H]
+
+\caption{\label{tab:unnamed-chunk-19}Breast cancer risk associated with increasing levels of iron-related biomarkers for women with premenopausal person-time.}
+\centering
+\begin{threeparttable}
+\resizebox{\linewidth}{!}{
+\fontsize{10}{12}\selectfont
+\begin{tabular}[t]{lllll>{\centering\arraybackslash}p{4cm}}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{4}{c}{Quartile of iron-related biomarker} & \multicolumn{1}{c}{Linear trend over quartiles$^c$} \\
+\cmidrule(l{3pt}r{3pt}){2-5} \cmidrule(l{3pt}r{3pt}){6-6}
+Biomarkers & Quartile 1 & Quartile 2 & Quartile 3 & Quartile 4 &  \\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Iron ($\mu$g/dL)}}\\
+\hspace{1em}Median & 57 & 82 & 105 & 142 & \\
+\hspace{1em}n & 451 & 462 & 449 & 431 & \\
+\hspace{1em}Ranges & [5,70] & (70,93] & (93,120] & (120,276] & \\
+\hspace{1em}Unadjusted & ref & 1.43 (1.03, 1.98) & 1.38 (0.99, 1.93) & 1.61 (1.16, 2.22) & 1.15 (1.03, 1.27)\\
+\hspace{1em}Adjusted$^a$ & ref & 1.47 (1.01, 2.15) & 1.35 (0.92, 1.98) & 1.46 (0.99, 2.14) & 1.10 (0.98, 1.24)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Ferritin$^b$ ($\mu$g/dL)}}\\
+\hspace{1em}Median & 14 & 31 & 54 & 112 & \\
+\hspace{1em}n & 463 & 441 & 444 & 445 & \\
+\hspace{1em}Ranges & [5,22] & (22,41] & (41,76] & (76,1625] & \\
+\hspace{1em}Unadjusted & ref & 1.42 (1.03, 1.95) & 1.48 (1.07, 2.05) & 1.07 (0.77, 1.48) & 1.04 (0.94, 1.15)\\
+\hspace{1em}Adjusted$^a$ & ref & 1.48 (1.02, 2.14) & 1.52 (1.05, 2.21) & 1.14 (0.78, 1.66) & 1.06 (0.95, 1.20)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Transferrin saturation (\%)}}\\
+\hspace{1em}Median & 17 & 25 & 32 & 44 & \\
+\hspace{1em}n & 478 & 436 & 455 & 424 & \\
+\hspace{1em}Ranges & [2,21] & (21,28] & (28,37] & (37,90] & \\
+\hspace{1em}Unadjusted & ref & 1.50 (1.08, 2.08) & 1.34 (0.97, 1.85) & 1.33 (0.97, 1.84) & 1.08 (0.98, 1.19)\\
+\hspace{1em}Adjusted$^a$ & ref & 1.72 (1.18, 2.50) & 1.38 (0.95, 1.99) & 1.20 (0.82, 1.75) & 1.04 (0.92, 1.16)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{First principal component}}\\
+\hspace{1em}Median & -1.6 & -0.3 & 0.6 & 1.6 & \\
+\hspace{1em}n & 449 & 448 & 448 & 448 & \\
+\hspace{1em}Ranges & [-7.96,-0.796] & (-0.796,0.201] & (0.201,1.02] & (1.02,4.85] & \\
+\hspace{1em}Unadjusted & ref & 1.51 (1.09, 2.10) & 1.44 (1.03, 2.01) & 1.55 (1.13, 2.14) & 1.13 (1.02, 1.25)\\
+\hspace{1em}Adjusted$^a$ & ref & 1.68 (1.15, 2.45) & 1.51 (1.03, 2.22) & 1.48 (1.02, 2.15) & 1.10 (0.98, 1.24)\\
+\bottomrule
+\end{tabular}}
+\begin{tablenotes}
+\item[a] Adjusted for  baseline smoking, alcohol, education,  HRT, age at menarche, age at first birth, oral contraceptive use, and BMI.
+\item[b] log transformed
+\item[c] Iron covariate in quartile units
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\clearpage
+\newpage
+
+\begin{table}[H]
+
+\caption{\label{tab:unnamed-chunk-17}Breast cancer risk associated with increasing levels of iron-related biomarkers for participants who were postmenopausal at study entry}
+\centering
+\begin{threeparttable}
+\resizebox{\linewidth}{!}{
+\fontsize{10}{12}\selectfont
+\begin{tabular}[t]{lllll>{\centering\arraybackslash}p{4cm}}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{4}{c}{Quartile of iron-related biomarker} & \multicolumn{1}{c}{Linear trend over quartiles$^c$} \\
+\cmidrule(l{3pt}r{3pt}){2-5} \cmidrule(l{3pt}r{3pt}){6-6}
+Biomarkers & Quartile 1 & Quartile 2 & Quartile 3 & Quartile 4 &  \\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Iron ($\mu$g/dL)}}\\
+\hspace{1em}Median & 65 & 85 & 102 & 130 & \\
+\hspace{1em}n & 958 & 948 & 917 & 932 & \\
+\hspace{1em}Ranges & [16,76] & (76,93] & (93,113] & (113,340] & \\
+\hspace{1em}Unadjusted & ref & 1.01 (0.84, 1.20) & 0.99 (0.83, 1.19) & 0.99 (0.83, 1.19) & 1.00 (0.94, 1.05)\\
+\hspace{1em}Adjusted$^a$ & ref & 0.93 (0.77, 1.13) & 0.98 (0.81, 1.20) & 0.98 (0.80, 1.19) & 1.00 (0.94, 1.06)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Ferritin$^b$ ($\mu$g/dL)}}\\
+\hspace{1em}Median & 32 & 65 & 102 & 174 & \\
+\hspace{1em}n & 966 & 929 & 938 & 922 & \\
+\hspace{1em}Ranges & [5,49] & (49,82] & (82,129] & (129,1404] & \\
+\hspace{1em}Unadjusted & ref & 1.19 (1.00, 1.43) & 1.20 (1.00, 1.43) & 1.15 (0.96, 1.38) & 1.04 (0.99, 1.11)\\
+\hspace{1em}Adjusted$^a$ & ref & 1.10 (0.91, 1.34) & 1.20 (0.99, 1.46) & 1.10 (0.90, 1.33) & 1.04 (0.98, 1.10)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Transferrin saturation (\%)}}\\
+\hspace{1em}Median & 20 & 26 & 33 & 42 & \\
+\hspace{1em}n & 1004 & 992 & 935 & 824 & \\
+\hspace{1em}Ranges & [4,23] & (23,29] & (29,36] & (36,87] & \\
+\hspace{1em}Unadjusted & ref & 0.94 (0.79, 1.12) & 1.06 (0.88, 1.26) & 0.94 (0.78, 1.13) & 0.99 (0.94, 1.05)\\
+\hspace{1em}Adjusted$^a$ & ref & 0.87 (0.72, 1.05) & 1.03 (0.84, 1.25) & 0.93 (0.76, 1.14) & 1.00 (0.93, 1.06)\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{First principal component}}\\
+\hspace{1em}Median & -1.5 & -0.3 & 0.5 & 1.5 & \\
+\hspace{1em}n & 939 & 939 & 938 & 939 & \\
+\hspace{1em}Ranges & [-8.53,-0.808] & (-0.808,0.115] & (0.115,0.958] & (0.958,4.7] & \\
+\hspace{1em}Unadjusted & ref & 1.05 (0.88, 1.26) & 1.02 (0.85, 1.22) & 1.00 (0.83, 1.19) & 1.00 (0.94, 1.05)\\
+\hspace{1em}Adjusted$^a$ & ref & 1.02 (0.84, 1.24) & 1.01 (0.83, 1.23) & 1.03 (0.84, 1.25) & 1.01 (0.95, 1.07)\\
+\bottomrule
+\end{tabular}}
+\begin{tablenotes}
+\item[a] Adjusted for  baseline smoking, alcohol, education,  HRT, age at menarche, age at first birth, oral contraceptive use, and BMI.
+\item[b] log transformed
+\item[c] Iron covariate in quartile units
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\clearpage
+\newpage
+
+\clearpage
+\newpage
+
+\begin{table}[H]
+
+\caption{\label{tab:unnamed-chunk-17}Breast cancer hazard ratios by menopause status at baseline and body iron status extreme thresholds}
+\centering
+\resizebox{\linewidth}{!}{
+\fontsize{10}{12}\selectfont
+\begin{tabular}[t]{>{\raggedright\arraybackslash}p{12em}>{\raggedright\arraybackslash}p{12em}>{\raggedright\arraybackslash}p{12em}>{\raggedright\arraybackslash}p{12em}r}
+\toprule
+High/low indicator & Iron measure & Cut points for dichotomized iron measure thresholds & HR (95\% CI) & n above/below threshold\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Postmenopausal}}\\
+\hspace{1em} &  & $\leq$ 12 & 0.54 (0.37, 0.79) & 107\\
+\cmidrule{3-5}
+\hspace{1em} &  & $\leq$ 25 & 0.82 (0.66, 1.02) & 359\\
+\cmidrule{3-5}
+\hspace{1em} & \multirow[t]{-3}{12em}{\raggedright\arraybackslash Ferritin ($\mu$g / L)} & $\leq$ 45 & 0.89 (0.77, 1.04) & 873\\
+\cmidrule{2-5}
+\hspace{1em}\multirow[t]{-4}{12em}{\raggedright\arraybackslash Low} & Transferrin saturation (\%) & $\leq$ 20 & 1.03 (0.86, 1.23) & 576\\
+\cmidrule{1-5}
+\hspace{1em} & Ferritin ($\mu$g / L) & $\geq$ 300 & 1.03 (0.67, 1.59) & 85\\
+\cmidrule{2-5}
+\hspace{1em} &  & $\geq$ 45 & 1.36 (1.07, 1.74) & 278\\
+\cmidrule{3-5}
+\hspace{1em} &  & $\geq$ 50 & 1.31 (0.93, 1.85) & 137\\
+\cmidrule{3-5}
+\hspace{1em} &  & $\geq$ 55 & 1.05 (0.66, 1.66) & 72\\
+\cmidrule{3-5}
+\hspace{1em}\multirow[t]{-5}{12em}{\raggedright\arraybackslash High} & \multirow[t]{-4}{12em}{\raggedright\arraybackslash Transferrin saturation (\%)} & $\geq$ 60 & 1.24 (0.63, 2.47) & 35\\
+\cmidrule{1-5}
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Premenopausal}}\\
+\hspace{1em} &  & $\leq$ 12 & 0.65 (0.45, 0.93) & 166\\
+\cmidrule{3-5}
+\hspace{1em} &  & $\leq$ 25 & 0.88 (0.69, 1.12) & 477\\
+\cmidrule{3-5}
+\hspace{1em} & \multirow[t]{-3}{12em}{\raggedright\arraybackslash Ferritin ($\mu$g / L)} & $\leq$ 45 & 0.97 (0.77, 1.21) & 864\\
+\cmidrule{2-5}
+\hspace{1em}\multirow[t]{-4}{12em}{\raggedright\arraybackslash Low} & Transferrin saturation (\%) & $\leq$ 20 & 0.76 (0.58, 1.00) & 415\\
+\cmidrule{1-5}
+\hspace{1em} & Ferritin ($\mu$g / L) & $\geq$ 200 & 0.93 (0.47, 1.84) & 45\\
+\cmidrule{2-5}
+\hspace{1em} &  & $\geq$ 45 & 1.26 (0.88, 1.79) & 200\\
+\cmidrule{3-5}
+\hspace{1em} &  & $\geq$ 50 & 1.10 (0.69, 1.74) & 114\\
+\cmidrule{3-5}
+\hspace{1em} &  & $\geq$ 55 & 1.15 (0.62, 2.14) & 60\\
+\cmidrule{3-5}
+\hspace{1em}\multirow[t]{-5}{12em}{\raggedright\arraybackslash High} & \multirow[t]{-4}{12em}{\raggedright\arraybackslash Transferrin saturation (\%)} & $\geq$ 60 & 1.64 (0.70, 3.84) & 31\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\clearpage
+\newpage
+
+\begin{table}[H]
+
+\caption{\label{tab:unnamed-chunk-15}Odds ratio (95\% CI) of breast cancer subtypes* by iron biomarkers in case-only sample.}
+\centering
+\resizebox{\linewidth}{!}{
+\fontsize{10}{12}\selectfont
+\begin{tabular}[t]{>{\raggedright\arraybackslash}p{15em}>{\raggedright\arraybackslash}p{10em}>{\raggedright\arraybackslash}p{10em}>{\raggedright\arraybackslash}p{10em}>{\raggedright\arraybackslash}p{10em}l}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{1}{c}{ } & \multicolumn{4}{c}{Iron biomarkers} \\
+\cmidrule(l{3pt}r{3pt}){3-6}
+Index group & counts & FE & FE sat & log(fertn) & PC1\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{One hormone receptor subtype (negative vs positive)}}\\
+\hspace{1em}ER- & ER+ (n= 2112);ER- (n= 379) & 1.00 (0.99, 1.00) & 0.99 (0.98, 1.00) & 1.04 (0.91, 1.20) & 0.97 (0.90, 1.05)\\
+\hspace{1em}PR- & PR+ (n= 1739);PR- (n= 675) & 1.00 (1.00, 1.01) & 1.01 (0.99, 1.02) & 1.04 (0.89, 1.23) & 1.06 (0.97, 1.17)\\
+\hspace{1em}HER2- & HER+ (n= 254);HER- (n= 1784) & 1.00 (0.99, 1.00) & 0.99 (0.99, 1.00) & 1.06 (0.95, 1.18) & 0.96 (0.90, 1.03)\\
+\hline
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Subtype combination (vs HR+/HER2-, n=1548)}}\\
+\hspace{1em}HR+/HER2+ or HR-/HER2+ vs HR+/HER2- & 251 & 1.00 (0.99, 1.00) & 0.99 (0.98, 1.00) & 0.97 (0.82, 1.15) & 0.93 (0.84, 1.02)\\
+\hspace{1em}HR-/HER2- vs HR+/HER2- & 213 & 1.00 (0.99, 1.00) & 0.99 (0.97, 1.00) & 1.10 (0.92, 1.31) & 0.92 (0.83, 1.03)\\
+\hline
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Invasive vs In Situ}}\\
+\hspace{1em} & Invasive (n= 2169); InSitu (n= 607) & 1.00 (1.00, 1.00) & 1.00 (0.99, 1.01) & 1.00 (0.90, 1.12) & 1.02 (0.96, 1.09)\\
+\bottomrule
+\multicolumn{6}{l}{\textsuperscript{*} Adjusted for age at diagnosis and menopause status at baseline.}\\
+\end{tabular}}
+\end{table}
+
+\clearpage
+\newpage
+
+\begin{table}[H]
+
+\caption{\label{tab:unnamed-chunk-13}Odds ratio (95\% CI) of breast cancer stage$^a$ by iron biomarkers in case-only sample.}
+\centering
+\resizebox{\linewidth}{!}{
+\fontsize{10}{12}\selectfont
+\begin{tabular}[t]{>{\raggedright\arraybackslash}p{15em}>{\raggedright\arraybackslash}p{10em}>{\raggedright\arraybackslash}p{10em}>{\raggedright\arraybackslash}p{10em}>{\raggedright\arraybackslash}p{10em}l}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{1}{c}{ } & \multicolumn{4}{c}{Iron biomarkers} \\
+\cmidrule(l{3pt}r{3pt}){3-6}
+Stage (vs stage 0 (n=572)) & n & Iron & Iron saturation & Ferritin$^b$ & PC1\\
+\midrule
+I & 1314 & 1.00 (1.00, 1.00) & 1.00 (0.99, 1.01) & 0.98 (0.87, 1.11) & 0.97 (0.91, 1.05)\\
+II & 509 & 1.00 (0.99, 1.00) & 0.99 (0.98, 1.00) & 0.94 (0.81, 1.09) & 0.91 (0.83, 0.99)\\
+III & 136 & 1.00 (0.99, 1.00) & 0.99 (0.97, 1.01) & 0.86 (0.69, 1.09) & 0.89 (0.78, 1.02)\\
+IV & 20 & 1.00 (0.99, 1.02) & 1.00 (0.96, 1.04) & 1.24 (0.71, 2.18) & 1.04 (0.75, 1.43)\\
+X & 22 & 0.99 (0.98, 1.01) & 0.98 (0.94, 1.02) & 0.87 (0.52, 1.47) & 0.85 (0.62, 1.17)\\
+\bottomrule
+\multicolumn{6}{l}{\textsuperscript{a} Adjusted for age at diagnosis and menopause status at baseline.}\\
+\multicolumn{6}{l}{\textsuperscript{b} log transformed}\\
+\end{tabular}}
+\end{table}
+
+\clearpage
+\newpage
+
+Supplemental text regarding sample handling and laboratory assessments
+
+The Advanced Research and Diagnostic Laboratory at the University of
+Minnesota acted as the central laboratory for this study, receiving
+7,621 serum samples in straws in a frozen state packaged on dry ice in
+goblets of 100 samples per goblet. Samples were stored frozen at -80C
+until testing. To prepare samples for analysis the straw samples were
+thawed to room temperature, then the straw was cut with a scissor and
+the sample expelled into a labelled cryovial and capped. Scissors were
+cleaned with an alcohol pad between each sample. Vials were mixed by
+inversion immediately before testing. Analysis was performed on the
+Roche Cobas 6000 Chemistry analyzer (Roche Diagnostics, Mannheim,
+Germany) using Roche reagents and calibrators. Test methodologies and
+inter-assay coefficient of variation were as follows. Iron is a
+colorimetric FerroZine end-point assay with an interassay CV of 2.5\% at
+a concentration 77 ug/dL. Ferritin is particle enhanced
+immunoturbidimetric assay with an interassay CV of 2.8\% at a
+concentration of 259 ug/L. Unsaturated Iron Binding Capacity (UIBC) is a
+colorimetric assay with an inter-assay CV of 3.3\% at a concentration of
+239 ug/dL. All samples had serum indices measurements for hemolysis,
+icterus and lipemia performed on the Roche Cobas 6000 analyzer by
+spectrophotometric method. Each assay has manufacture defined thresholds
+for each indice and results were not reported if this threshold was
+exceeded. Two levels of quality control were analyzed twice per day,
+once at the beginning of daily testing and once at the end. One quality
+control was a laboratory developed pooled serum sample and the other a
+Roche Precipath U commercially available product. Assay calibration was
+performed per manufacture specifications using manufacturer calibrators.
+Sample results were reported to the laboratory information system via
+electronic instrument interface only after quality control and
+calibration results were deemed acceptable per laboratory and
+manufacture standards.
+
+Results that could not be reported were primarily due to sample
+hemolysis. Our Cobas analyzer is programmed to automatically perform
+specimen integrity checks for hemolysis, lipemia and icterus. The UIBC
+assay is particularly sensitive to hemolysis and has the lowest
+hemolysis index threshold for acceptability which is why more UIBC test
+results were not reported.
+
+\end{document}

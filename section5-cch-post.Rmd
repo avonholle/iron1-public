@@ -1,0 +1,298 @@
+---
+title: "Section 5: Post-hoc 2: Association between extreme transferrin saturation (TSAT) levels and breast cancer risk (case-cohort analysis). postmenopausal"
+output:
+  pdf_document:
+    toc: no
+    number_sections: true
+    includes:
+      in_header: header.tex 
+  html_document:
+    theme: united
+    toc: yes
+geometry: margin=2cm
+always_allow_html: true
+---
+
+
+# Section 5. Post-hoc 2: Association between extreme transferrin saturation (TSAT) levels and breast cancer risk (case-cohort analysis)
+
+
+- High transferrin saturation levels are considered to be > 45%, > 50%, > 55%, and > 60%. All of these cutoff values had previously been proposed or used in population-based studies of elevated serum transferrin saturation [@mainousElevatedSerumTransferrin2004].
+
+- Low transferring saturation levels can be as low as 15% and up to 25% thresholds [@peyrin-birouletGuidelinesDiagnosisTreatment2015]
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = F, 
+                      results = 'markup',
+                      warning = F)
+
+```
+
+
+```{r, include=F}
+# bring in packages
+require(knitr)
+require(ggplot2)
+require(kableExtra)
+require(survival)
+require(ggplot2)
+require(dplyr)
+```
+
+
+```{r}
+
+# Source of data: section2-cch-postmenopause.Rmd
+load(file="data-post.RData") # df.pc
+
+df = data.frame(df.pc)
+
+# select only cases and subcohort
+
+df = df[df$event==1 | df$subcohort==1,]
+dim(df)
+
+```
+
+
+```{r, results='hide'}
+
+# handle data for survival analysis
+
+df = within(df, {
+
+
+  fe.log = log(UMN_Iron_Baseline_FE)
+  fertn.log = log(UMN_Iron_Baseline_FERTN)
+  fesat.log = log(UMN_Iron_Baseline_FESAT)
+  tibc.log = log(UMN_Iron_Baseline_TIBC)
+  uibc.log = log(UMN_Iron_Baseline_UIBC)
+    
+  fe.scale = scale(log(UMN_Iron_Baseline_FE), scale=F)
+  fertn.scale = scale(log(UMN_Iron_Baseline_FERTN), scale=F)
+  fesat.scale = scale(log(UMN_Iron_Baseline_FESAT), scale=F)
+  tibc.scale = scale(log(UMN_Iron_Baseline_TIBC), scale=F)
+  uibc.scale = scale(log(UMN_Iron_Baseline_UIBC), scale=F)
+
+})
+
+confounder.list = c('smoke.f2', 'alc.f2', 'educ.f2', 'ever.hrt.f', 'birth.control.f',
+                    'one.term.birth.f')
+
+
+# time-dept menopause ==============================
+
+summary(df$fu.meno.age) # 892 missing
+df$miss.meno.age = with(df, is.na(df$fu.meno.age))
+with(df, table(miss.meno.age, menop.status)) 
+
+# should I assume they are still pre-menopausal at baseline?
+df$fu.meno.age.rev = with(df, ifelse( is.na(fu.meno.age)==T & menop.status==1, baseline.age,
+                                    ifelse(is.na(fu.meno.age)==T & menop.status==0, 99, fu.meno.age )))
+summary(df$fu.meno.age.rev)
+
+df[df$PSID %in% c("00224_100003"), c("fu.meno.age", "baseline.age", "menop.status", "fu.meno.age.rev")]
+
+df$miss.meno.age.rev = with(df, is.na(df$fu.meno.age.rev))
+with(df, table(miss.meno.age.rev, menop.status)) # check
+
+```
+
+## FE Saturation
+
+```{r}
+
+df$iron.cov2 = with(df, ifelse(UMN_Iron_Baseline_FESAT<12, 1, 
+                               ifelse(!is.na(UMN_Iron_Baseline_FESAT), 0, NA)))
+table(df$iron.cov2, useNA = "ifany")
+
+cox.deficiency = coxph(Surv(start.age, c.age, event) ~ iron.cov2,
+             data=df); cox.deficiency
+```
+
+
+```{r}
+
+# function to output HR with 95% ci =========================
+get.ci = function(df){
+  
+  colnames(df)[which(colnames(df) %in% c("SE"))] = "se.coef"
+  colnames(df)[which(colnames(df) %in% c("p"))] = "p.value"
+  colnames(df)[which(colnames(df) %in% c("Value"))] = "coef"
+
+  # source: https://stackoverflow.com/questions/50118394/selecting-and-colouring-single-table-cells-with-kableextra-in-r-markdown-cell-sp
+  
+   with(data.frame(df),  ifelse(p.value<0.05/10,
+                                paste0("\\textbf{",
+                                       formatC(round(exp(coef),2), format="f", flag='0', digits=2),
+                                       " (",
+                                      formatC(round(exp(coef-1.96*se.coef),2), format="f", digits=2),
+                                      ", ",
+                                      formatC(round(exp(coef+1.96*se.coef),2), format="f", digits=2),
+                                      ")}"),
+        paste0(formatC(round(exp(coef),2), format="f", flag='0', digits=2),
+                                  " (",
+                                  formatC(round(exp(coef-1.96*se.coef),2), format="f", digits=2),
+                                  ", ",
+                                  formatC(round(exp(coef+1.96*se.coef),2), format="f", digits=2),
+                                  ")")))
+  }
+
+```
+
+
+```{r}
+# make a function of the previous analyses repeating over covariates.
+
+get.coefs = function(threshold, extreme="low", n.size=50784) {
+
+var.fe = "fesat"
+# threshold=30; extreme="low" ; n.size=50784 # debug
+
+# designate the iron covariate  
+iron.var = if(extreme == "low") {
+  with(df, ifelse(UMN_Iron_Baseline_FESAT<=threshold, 1, 
+                               ifelse(!is.na(UMN_Iron_Baseline_FERTN), 0, NA)))
+  } else {
+    with(df, ifelse(UMN_Iron_Baseline_FESAT>=threshold, 1, 
+                               ifelse(!is.na(UMN_Iron_Baseline_FERTN), 0, NA)))
+  }
+
+df$iron.var = iron.var
+summary(df$iron.var)
+df  = df[complete.cases(df$iron.var),]
+
+
+
+# 1) Cox ph with quartiles ==================================
+
+cox1 = cch(Surv(start.age, c.age, event) ~ iron.var ,
+             data=df,
+             subcoh = ~subcohort,
+             id = ~ PSID,
+             cohort.size=n.size)
+
+cox1 = cch(Surv(start.age, c.age, event) ~ iron.var ,
+             data=df,
+             subcoh = ~subcohort,
+             id = ~ PSID,
+             cohort.size=n.size) 
+
+names(summary(cox1))
+
+cq = coef(summary(cox1))
+coefs.1 = get.ci(cq)[1]
+m.event = summary(cox1)$nevent
+tot = nrow(df)
+
+n.threshold = table(iron.var)[2] # number < that are in subcohort
+n.threshold.sub = table(df$iron.var,df$subcohort)[2,2] # number < that are in subcohort
+sub.size = cox1$subcohort.size
+
+cox1.info = data.frame(threshold = threshold,
+                      coef = coefs.1,
+                      n.threshold = n.threshold)
+#                      n.threshold= paste0(n.threshold, " (", tot, ")" ))
+
+# put all this info into a list of objects to output from the function =====================
+
+return(list(cox1.info))
+
+}
+
+# get.coefs( threshold=30) # check
+
+```
+
+```{r}
+
+# lower thresholds
+thresh = c(20)
+  
+models1 = lapply(thresh, function(x) get.coefs(x, "low"))
+
+models1
+
+# upper thresholds
+thresh2 = c(45, 50, 55, 60)
+  
+models2 = lapply(thresh2, function(x) get.coefs(x, "high"))
+
+models2
+
+
+```
+
+## Association between breast cancer HR and lower thresholds
+
+```{r}
+
+# extract out first element from each list, the coefficients to print off to table
+coefs.list.1 = lapply(models1, '[[', 1)  # This returns a list with only the third element, the extracted coef data frame
+coefs.list.1
+
+# extract out first element from each list, the coefficients to print off to table
+coefs.list.2 = lapply(models2, '[[', 1)  # This returns a list with only the third element, the extracted coef data frame
+coefs.list.2
+
+cox.dat1 =  coefs.list.1 %>% bind_rows() # source: https://stackoverflow.com/questions/2641653/pass-a-data-frame-column-name-to-a-function
+cox.dat1
+cox.dat1$high=0
+
+cox.dat2 =  coefs.list.2 %>% bind_rows() # source: https://stackoverflow.com/questions/2641653/pass-a-data-frame-column-name-to-a-function
+cox.dat2
+cox.dat2$high=1
+
+cox.dat = rbind(cox.dat1, cox.dat2)
+cox.dat2.post = cox.dat
+
+cox.dat2.post$threshold.f = with(cox.dat2.post, factor(threshold, 
+                                         labels = c("$\\leq$ 20",
+                                                    "$\\geq$ 45",
+                                                    "$\\geq$ 50",
+                                                    "$\\geq$ 55",
+                                                    "$\\geq$ 60" )))
+cox.dat2.post
+
+
+```
+
+```{r, results='markup'}
+kable(cox.dat2.post, 
+      booktabs=T, 
+      col.names = c("TSAT $\\leq$ threshold (\\%)", "HR (95\\% CI)", "n, threshold", "High/low",
+                    "threshold"),
+      escape=F)
+
+
+save(cox.dat2.post, file="../sections/k5-post.RData")
+
+```
+
+
+### Association between breast cancer HR and upper thresholds
+
+```{r}
+
+# extract out first element from each list, the coefficients to print off to table
+coefs.list2 = lapply(models2, '[[', 1)  # This returns a list with only the third element, the extracted coef data frame
+coefs.list2
+
+
+cox.dat2.post =  coefs.list2 %>% bind_rows() # source: https://stackoverflow.com/questions/2641653/pass-a-data-frame-column-name-to-a-function
+
+cox.dat2.post
+
+
+```
+
+
+```{r, results='markup'}
+kable(cox.dat2.post, 
+      booktabs=T, 
+      caption="postmenopausal",
+      col.names = c("TSAT $\\geq$ threshold (\\%)", "HR (95\\% CI)", "n, threshold"),
+      escape=F)
+```
+

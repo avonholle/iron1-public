@@ -1,0 +1,1086 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames*,x11names*}{xcolor}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Data handling for iron project -- case-cohort sample},
+  colorlinks=true,
+  linkcolor=magenta,
+  filecolor=Maroon,
+  citecolor=red,
+  urlcolor=blue,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1.5cm]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+% https://github.com/rstudio/rmarkdown/issues/337
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+% https://github.com/rstudio/rmarkdown/pull/252
+\usepackage{titling}
+\setlength{\droptitle}{-2em}
+
+\pretitle{\vspace{\droptitle}\centering\huge}
+\posttitle{\par}
+
+\preauthor{\centering\large\emph}
+\postauthor{\par}
+
+\predate{\centering\large\emph}
+\postdate{\par}
+
+\title{Data handling for iron project -- case-cohort sample}
+\date{20 July, 2020}
+
+\begin{document}
+\maketitle
+
+{
+\hypersetup{linkcolor=}
+\setcounter{tocdepth}{3}
+\tableofcontents
+}
+\hypertarget{data-handling-for-the-r-project}{%
+\section{Data handling for the R
+project}\label{data-handling-for-the-r-project}}
+
+\hypertarget{my-original-work-in-r}{%
+\subsection{My original work in R}\label{my-original-work-in-r}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# read original SAS data into R}
+\NormalTok{df1 =}\StringTok{ }\KeywordTok{read_sas}\NormalTok{(}\DataTypeTok{data_file =} \StringTok{"../../Sister Study/data/dr00224_00_02/dr00224_00_02.sas7bdat"}\NormalTok{, }
+    \DataTypeTok{catalog_file =} \StringTok{"../../Sister Study/formats-subset/sisformats.sas7bcat"}\NormalTok{)}
+
+\KeywordTok{table}\NormalTok{(}\KeywordTok{as_factor}\NormalTok{(df1}\OperatorTok{$}\NormalTok{DR224_FU_BCInvD_Event_Serum))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##     0     1 
+## 46930  3383
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{with}\NormalTok{(df1, }\KeywordTok{table}\NormalTok{(FU_BC_Event, FU_BCInvD_Event))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##            FU_BCInvD_Event
+## FU_BC_Event     0     1
+##           0 47245     0
+##           1   125  3387
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df2 =}\StringTok{ }\NormalTok{df1[, }\KeywordTok{c}\NormalTok{(}\StringTok{"PSID"}\NormalTok{, }\StringTok{"FU_BCInvD_Event"}\NormalTok{, }\StringTok{"AgeExact_Baseline"}\NormalTok{, }\StringTok{"FU_BCInvD_EOFAgeExact"}\NormalTok{, }
+    \StringTok{"FU_BCInvD_EOFAge"}\NormalTok{, }\StringTok{"HH_PSID"}\NormalTok{, }\StringTok{"UMN_Iron_Subcohort"}\NormalTok{, }\StringTok{"UMN_Iron"}\NormalTok{, }\StringTok{"UMN_Iron_SCL_BCInvD_Event"}\NormalTok{, }
+    \StringTok{"UMN_Iron_Baseline_FE"}\NormalTok{, }\StringTok{"UMN_Iron_Baseline_FERTN"}\NormalTok{, }\StringTok{"UMN_Iron_Baseline_FESAT"}\NormalTok{, }
+    \StringTok{"UMN_Iron_Baseline_UIBC"}\NormalTok{, }\StringTok{"FU_BCInvD_DxAgeExactMax"}\NormalTok{, }\StringTok{"FU_BCInvD_DxAgeExactMin"}\NormalTok{, }
+    \StringTok{"DR224_FU_BCInvD_Event_Serum"}\NormalTok{, }\StringTok{"FU_BC_Event"}\NormalTok{, }\StringTok{"SCL_BC_Event"}\NormalTok{)]}
+\KeywordTok{dim}\NormalTok{(df2)  }\CommentTok{# 50,884}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 50884    18
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{names.vars =}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"PSID"}\NormalTok{, }\StringTok{"event"}\NormalTok{, }\StringTok{"baseline.age"}\NormalTok{, }\StringTok{"FU_BCInvD_EOFAgeExact"}\NormalTok{, }\StringTok{"FU_BCInvD_EOFAge"}\NormalTok{, }
+    \StringTok{"HH_PSID"}\NormalTok{, }\StringTok{"UMN_Iron_Subcohort"}\NormalTok{, }\StringTok{"UMN_Iron"}\NormalTok{, }\StringTok{"UMN_Iron_SCL_BCInvD_Event"}\NormalTok{, }\StringTok{"UMN_Iron_Baseline_FE"}\NormalTok{, }
+    \StringTok{"UMN_Iron_Baseline_FERTN"}\NormalTok{, }\StringTok{"UMN_Iron_Baseline_FESAT"}\NormalTok{, }\StringTok{"UMN_Iron_Baseline_UIBC"}\NormalTok{, }
+    \StringTok{"FU_BCInvD_DxAgeExactMax"}\NormalTok{, }\StringTok{"FU_BCInvD_DxAgeExactMin"}\NormalTok{, }\StringTok{"DR224_FU_BCInvD_Event_Serum"}\NormalTok{, }
+    \StringTok{"FU_BC_Event"}\NormalTok{, }\StringTok{"SCL_BC_Event"}\NormalTok{)}
+
+\KeywordTok{colnames}\NormalTok{(df2) =}\StringTok{ }\NormalTok{names.vars}
+
+
+\NormalTok{df2 =}\StringTok{ }\KeywordTok{within}\NormalTok{(df2, \{}
+\NormalTok{    c.age =}\StringTok{ }\KeywordTok{ifelse}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(FU_BCInvD_EOFAgeExact), FU_BCInvD_EOFAge }\OperatorTok{+}\StringTok{ }\KeywordTok{round}\NormalTok{(}\KeywordTok{runif}\NormalTok{(}\KeywordTok{nrow}\NormalTok{(df2), }
+        \DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{), }\DecValTok{2}\NormalTok{), FU_BCInvD_EOFAgeExact)}
+\NormalTok{    start.age =}\StringTok{ }\NormalTok{baseline.age}
+\NormalTok{    futime =}\StringTok{ }\NormalTok{c.age }\OperatorTok{-}\StringTok{ }\NormalTok{start.age}
+\NormalTok{\})}
+
+\KeywordTok{dim}\NormalTok{(df2)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 50884    21
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# select people from study}
+\NormalTok{df2 =}\StringTok{ }\NormalTok{df2[df2}\OperatorTok{$}\NormalTok{UMN_Iron }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{, ]}
+\KeywordTok{dim}\NormalTok{(df2)  }\CommentTok{# 6011}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 6011   21
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df2 =}\StringTok{ }\NormalTok{df2[}\KeywordTok{which}\NormalTok{(}\KeywordTok{complete.cases}\NormalTok{(df2}\OperatorTok{$}\NormalTok{PSID)), ]}
+\KeywordTok{dim}\NormalTok{(df2)  }\CommentTok{# 6008 (eliminate 3 people who overlap in prospective BRCA study and twice studied validation). see 'Sampling Protocol for Iron Project based on Iron Panel Assays in Serum_20190715.docx'}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 6008   21
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{table}\NormalTok{(}\KeywordTok{as_factor}\NormalTok{(df2}\OperatorTok{$}\NormalTok{UMN_Iron_Subcohort))  }\CommentTok{# check}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##    1 
+## 3200
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df3. =}\StringTok{ }\NormalTok{df2}
+\KeywordTok{dim}\NormalTok{(df3.)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 6008   21
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Get labels back}
+\NormalTok{df3. <-}\StringTok{ }\NormalTok{df3. }\OperatorTok{%>%}\StringTok{ }\KeywordTok{copy_labels_from}\NormalTok{(df1)  }\CommentTok{# Source: http://larmarange.github.io/labelled/reference/copy_labels.html}
+
+\CommentTok{# create a subcohort binary variable: 1=subcohort 0=not}
+
+\NormalTok{df3.}\OperatorTok{$}\NormalTok{UMN_Iron_Subcohort[}\KeywordTok{is.na}\NormalTok{(df3.}\OperatorTok{$}\NormalTok{UMN_Iron_Subcohort)] =}\StringTok{ }\DecValTok{0}  \CommentTok{# convert missing to 0s}
+\KeywordTok{head}\NormalTok{(df3.}\OperatorTok{$}\NormalTok{UMN_Iron_Subcohort)  }\CommentTok{# check}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1 1 1 1 0 1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{dim}\NormalTok{(df3.)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 6008   21
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{table}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(df3.}\OperatorTok{$}\NormalTok{PSID))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## FALSE 
+##  6008
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{table}\NormalTok{(df3.}\OperatorTok{$}\NormalTok{UMN_Iron_Subcohort)  }\CommentTok{# check. This matches numbers in documentation.}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##    0    1 
+## 2808 3200
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(df1}\OperatorTok{$}\NormalTok{FU_BCInvD_Event)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+## 0.00000 0.00000 0.00000 0.06689 0.00000 1.00000      66
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{with}\NormalTok{(df3., }\KeywordTok{table}\NormalTok{(UMN_Iron_Subcohort, event))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                   event
+## UMN_Iron_Subcohort    0    1
+##                  0    9 2796
+##                  1 2978  222
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{with}\NormalTok{(df3., }\KeywordTok{sum}\NormalTok{(}\KeywordTok{table}\NormalTok{(UMN_Iron_Subcohort, event)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 6005
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df3.}\OperatorTok{$}\NormalTok{iron.study =}\StringTok{ }\NormalTok{df3.}\OperatorTok{$}\NormalTok{UMN_Iron}
+
+\KeywordTok{head}\NormalTok{(df3.[}\KeywordTok{which}\NormalTok{(df3.}\OperatorTok{$}\NormalTok{UMN_Iron_Subcohort }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{&}\StringTok{ }\NormalTok{df3.}\OperatorTok{$}\NormalTok{event }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\StringTok{"PSID"}\NormalTok{, }\StringTok{"UMN_Iron_Baseline_FE"}\NormalTok{, }
+    \StringTok{"iron.study"}\NormalTok{, }\StringTok{"UMN_Iron_Subcohort"}\NormalTok{, }\StringTok{"UMN_Iron_SCL_BCInvD_Event"}\NormalTok{, }\StringTok{"event"}\NormalTok{, }\StringTok{"start.age"}\NormalTok{, }
+    \StringTok{"c.age"}\NormalTok{)], }\DecValTok{15}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 9 x 8
+##   PSID  UMN_Iron_Baseli… iron.study UMN_Iron_Subcoh… UMN_Iron_SCL_BC…   event
+##   <chr>            <dbl>      <dbl>            <dbl>            <dbl> <dbl+l>
+## 1 0022…              111          1                0                1 0 [0) …
+## 2 0022…               51          1                0               NA 0 [0) …
+## 3 0022…               67          1                0               NA 0 [0) …
+## 4 0022…               94          1                0               NA 0 [0) …
+## 5 0022…               86          1                0               NA 0 [0) …
+## 6 0022…              129          1                0               NA 0 [0) …
+## 7 0022…               78          1                0               NA 0 [0) …
+## 8 0022…              104          1                0               NA 0 [0) …
+## 9 0022…               95          1                0               NA 0 [0) …
+## # … with 2 more variables: start.age <dbl>, c.age <dbl>
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{psid.exclude.noevent =}\StringTok{ }\NormalTok{df3.[}\KeywordTok{which}\NormalTok{(df3.}\OperatorTok{$}\NormalTok{UMN_Iron_Subcohort }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{&}\StringTok{ }\NormalTok{df3.}\OperatorTok{$}\NormalTok{event }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{), }
+\NormalTok{    ]}\OperatorTok{$}\NormalTok{PSID}
+\NormalTok{psid.exclude.noevent}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "00224_200085" "00224_206789" "00224_212188" "00224_213386" "00224_218075"
+## [6] "00224_219495" "00224_231861" "00224_235235" "00224_240490"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# 9 people are not in subcohort, but they do not have an event. Will exclude}
+\CommentTok{# later}
+
+\CommentTok{# One of these participants is labeled as cases with UMN_Iron_SCL_BCInvD_Event}
+\CommentTok{# (UMN Iron: Prospective BrCa Survivor Study, SCL BrCa case status at time of}
+\CommentTok{# sampling (1=dx before SCL blood draw 0=dx after SCL Blood Draw) [data release}
+\CommentTok{# 6.0])}
+
+\KeywordTok{head}\NormalTok{(df1[df1}\OperatorTok{$}\NormalTok{PSID }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"00224_200085"}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\StringTok{"PSID"}\NormalTok{, }\StringTok{"UMN_Iron_Baseline_FE"}\NormalTok{, }\StringTok{"UMN_Iron_Subcohort"}\NormalTok{, }
+    \StringTok{"UMN_Iron_Validation"}\NormalTok{, }\StringTok{"UMN_Iron_SCL_BCInvD_Event"}\NormalTok{, }\StringTok{"FU_BCInvD_Event"}\NormalTok{, }\StringTok{"AgeExact_Baseline"}\NormalTok{, }
+    \StringTok{"FU_BCInvD_EOFAge"}\NormalTok{)])}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 1 x 8
+##   PSID  UMN_Iron_Baseli… UMN_Iron_Subcoh… UMN_Iron_Valida… UMN_Iron_SCL_BC…
+##   <chr>            <dbl>            <dbl>            <dbl>            <dbl>
+## 1 0022…              111               NA               NA                1
+## # … with 3 more variables: FU_BCInvD_Event <dbl+lbl>, AgeExact_Baseline <dbl>,
+## #   FU_BCInvD_EOFAge <dbl>
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{with}\NormalTok{(df3., }\KeywordTok{table}\NormalTok{(UMN_Iron_Subcohort, event))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                   event
+## UMN_Iron_Subcohort    0    1
+##                  0    9 2796
+##                  1 2978  222
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{table}\NormalTok{(df3.}\OperatorTok{$}\NormalTok{UMN_Iron_Subcohort)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##    0    1 
+## 2808 3200
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df3.}\OperatorTok{$}\NormalTok{subcohort =}\StringTok{ }\NormalTok{df3.}\OperatorTok{$}\NormalTok{UMN_Iron_Subcohort}
+\KeywordTok{with}\NormalTok{(df3., }\KeywordTok{table}\NormalTok{(subcohort, event))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##          event
+## subcohort    0    1
+##         0    9 2796
+##         1 2978  222
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{nrow}\NormalTok{(df3.)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 6008
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{table}\NormalTok{(df3.}\OperatorTok{$}\NormalTok{subcohort)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##    0    1 
+## 2808 3200
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{with}\NormalTok{(df3., }\KeywordTok{table}\NormalTok{(subcohort, event, }\DataTypeTok{useNA =} \StringTok{"always"}\NormalTok{))  }\CommentTok{#2796+9 = 2805 and 2978+222 = 3200}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##          event
+## subcohort    0    1 <NA>
+##      0       9 2796    3
+##      1    2978  222    0
+##      <NA>    0    0    0
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# there are 9 people who are not in subcohort and do not have an event according}
+\CommentTok{# to the 'FU_BCInvD_Event' variable They are people who were cases in v6 but not}
+\CommentTok{# in v7.}
+
+\KeywordTok{table}\NormalTok{(df3.}\OperatorTok{$}\NormalTok{subcohort)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##    0    1 
+## 2808 3200
+\end{verbatim}
+
+\hypertarget{remove-participants-who-have-unknown-timing-u3.-5952---5949-3}{%
+\subsubsection{Remove participants who have unknown timing (u=3). 5952 -
+5949 =
+3}\label{remove-participants-who-have-unknown-timing-u3.-5952---5949-3}}
+
+For missing tags in SAS format, FUEVENT\_S format in the sisformats.bcat
+file indicates .U) Timing unk (relative to baseline) (n=3)
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# get information on missing event status}
+\NormalTok{df3.}\OperatorTok{$}\NormalTok{event.zap =}\StringTok{ }\KeywordTok{zap_missing}\NormalTok{(df3.}\OperatorTok{$}\NormalTok{event)}
+\KeywordTok{summary}\NormalTok{(df3.}\OperatorTok{$}\NormalTok{event.zap)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##  0.0000  0.0000  1.0000  0.5026  1.0000  1.0000       3
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ids.withdraw =}\StringTok{ }\NormalTok{df3.[}\KeywordTok{is.na}\NormalTok{(df3.}\OperatorTok{$}\NormalTok{event.zap), }\KeywordTok{c}\NormalTok{(}\StringTok{"PSID"}\NormalTok{)]  }\CommentTok{# note: having problems with missing in haven_labelled. zap_missing?}
+
+\KeywordTok{head}\NormalTok{(ids.withdraw)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 3 x 1
+##   PSID        
+##   <chr>       
+## 1 00224_245608
+## 2 00224_246695
+## 3 00224_248049
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{nrow}\NormalTok{(ids.withdraw)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 3
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# }\AlertTok{NOTE}\CommentTok{: that the W withdraw category is NOT in the SAS format catalog provided to}
+\CommentTok{# me.}
+
+\NormalTok{df3.. =}\StringTok{ }\NormalTok{df3.[}\OperatorTok{!}\NormalTok{(df3.}\OperatorTok{$}\NormalTok{PSID }\OperatorTok{%in%}\StringTok{ }\NormalTok{ids.withdraw}\OperatorTok{$}\NormalTok{PSID), ]}
+
+\KeywordTok{dim}\NormalTok{(df3..)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 6005   24
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(df3..}\OperatorTok{$}\NormalTok{futime)  }\CommentTok{# 9 missing futime after removing 3 with unknown timing.}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##   0.000   4.100   7.900   7.066   9.800  13.400       9
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{table}\NormalTok{(df3.[df3.}\OperatorTok{$}\NormalTok{PSID }\OperatorTok{%in%}\StringTok{ }\NormalTok{ids.withdraw}\OperatorTok{$}\NormalTok{PSID, ]}\OperatorTok{$}\NormalTok{subcohort)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## 0 
+## 3
+\end{verbatim}
+
+\hypertarget{for-participants-who-are-missing-a-follow-up-age-take-the-median-for-minmax-age-n9}{%
+\subsubsection{For participants who are missing a follow-up age, take
+the median for min/max age :
+(n=9)}\label{for-participants-who-are-missing-a-follow-up-age-take-the-median-for-minmax-age-n9}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# }\AlertTok{NOTE}\CommentTok{: KOB suggested we use min/max follow-up age to find a follow-up age}
+\CommentTok{# instead of removing from sample.  after 3/2020 draft review}
+
+\KeywordTok{table}\NormalTok{(df3..[(}\KeywordTok{is.na}\NormalTok{(df3..}\OperatorTok{$}\NormalTok{c.age)), ]}\OperatorTok{$}\NormalTok{event)  }\CommentTok{# all 9 had an event}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## 1 
+## 9
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{table}\NormalTok{(df3..[(}\KeywordTok{is.na}\NormalTok{(df3..}\OperatorTok{$}\NormalTok{c.age)), ]}\OperatorTok{$}\NormalTok{FU_BCInvD_DxAgeExactMax)  }\CommentTok{# max age at event}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## 47.8 50.5 57.2 62.3 69.3 69.7 73.5 75.2 81.1 
+##    1    1    1    1    1    1    1    1    1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{table}\NormalTok{(df3..[(}\KeywordTok{is.na}\NormalTok{(df3..}\OperatorTok{$}\NormalTok{c.age)), ]}\OperatorTok{$}\NormalTok{FU_BCInvD_DxAgeExactMin)  }\CommentTok{# min age at event}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## 44.7 49.4 56.9 61.8 68.5 69.5 73.3 74.4 79.8 
+##    1    1    1    1    1    1    1    1    1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df4 =}\StringTok{ }\NormalTok{df3..}
+\NormalTok{df4}\OperatorTok{$}\NormalTok{median =}\StringTok{ }\KeywordTok{apply}\NormalTok{(df4[}\KeywordTok{c}\NormalTok{(}\StringTok{"FU_BCInvD_DxAgeExactMax"}\NormalTok{, }\StringTok{"FU_BCInvD_DxAgeExactMin"}\NormalTok{)], }
+    \DecValTok{1}\NormalTok{, median)}
+\KeywordTok{head}\NormalTok{(df4[}\KeywordTok{is.na}\NormalTok{(df4}\OperatorTok{$}\NormalTok{c.age), }\KeywordTok{c}\NormalTok{(}\StringTok{"event"}\NormalTok{, }\StringTok{"FU_BCInvD_DxAgeExactMax"}\NormalTok{, }\StringTok{"FU_BCInvD_DxAgeExactMin"}\NormalTok{, }
+    \StringTok{"FU_BCInvD_EOFAgeExact"}\NormalTok{, }\StringTok{"FU_BCInvD_EOFAge"}\NormalTok{, }\StringTok{"c.age"}\NormalTok{, }\StringTok{"median"}\NormalTok{)])}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 6 x 7
+##     event FU_BCInvD_DxAge… FU_BCInvD_DxAge… FU_BCInvD_EOFAg… FU_BCInvD_EOFAge
+##   <dbl+l>            <dbl>            <dbl>            <dbl>            <dbl>
+## 1 1 [1) …             50.5             49.4               NA               NA
+## 2 1 [1) …             57.2             56.9               NA               NA
+## 3 1 [1) …             75.2             74.4               NA               NA
+## 4 1 [1) …             69.3             68.5               NA               NA
+## 5 1 [1) …             81.1             79.8               NA               NA
+## 6 1 [1) …             47.8             44.7               NA               NA
+## # … with 2 more variables: c.age <dbl>, median <dbl>
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df4}\OperatorTok{$}\NormalTok{c.age =}\StringTok{ }\KeywordTok{with}\NormalTok{(df4, }\KeywordTok{ifelse}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(c.age), median, c.age))}
+
+\KeywordTok{head}\NormalTok{(df4[, }\KeywordTok{c}\NormalTok{(}\StringTok{"event"}\NormalTok{, }\StringTok{"FU_BCInvD_DxAgeExactMax"}\NormalTok{, }\StringTok{"FU_BCInvD_DxAgeExactMin"}\NormalTok{, }\StringTok{"FU_BCInvD_EOFAgeExact"}\NormalTok{, }
+    \StringTok{"FU_BCInvD_EOFAge"}\NormalTok{, }\StringTok{"c.age"}\NormalTok{)])}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 6 x 6
+##     event FU_BCInvD_DxAge… FU_BCInvD_DxAge… FU_BCInvD_EOFAg… FU_BCInvD_EOFAge
+##   <dbl+l>            <dbl>            <dbl>            <dbl>            <dbl>
+## 1 0 [0) …               NA               NA             50.8               50
+## 2 0 [0) …               NA               NA             55.7               55
+## 3 0 [0) …               NA               NA             58.4               58
+## 4 0 [0) …               NA               NA             74.8               74
+## 5 1 [1) …               NA               NA             64.5               64
+## 6 0 [0) …               NA               NA             64                 64
+## # … with 1 more variable: c.age <dbl>
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df4[}\KeywordTok{which}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(df4}\OperatorTok{$}\NormalTok{c.age)), }\KeywordTok{c}\NormalTok{(}\StringTok{"event"}\NormalTok{, }\StringTok{"FU_BCInvD_DxAgeExactMax"}\NormalTok{, }\StringTok{"FU_BCInvD_DxAgeExactMin"}\NormalTok{, }
+    \StringTok{"FU_BCInvD_EOFAgeExact"}\NormalTok{, }\StringTok{"FU_BCInvD_EOFAge"}\NormalTok{, }\StringTok{"c.age"}\NormalTok{)]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 0 x 6
+## # … with 6 variables: event <dbl+lbl>, FU_BCInvD_DxAgeExactMax <dbl>,
+## #   FU_BCInvD_DxAgeExactMin <dbl>, FU_BCInvD_EOFAgeExact <dbl>,
+## #   FU_BCInvD_EOFAge <dbl>, c.age <dbl>
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df4}\OperatorTok{$}\NormalTok{futime =}\StringTok{ }\KeywordTok{with}\NormalTok{(df4, }\KeywordTok{ifelse}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(futime), c.age }\OperatorTok{-}\StringTok{ }\NormalTok{baseline.age, futime))}
+\KeywordTok{dim}\NormalTok{(df4)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 6005   25
+\end{verbatim}
+
+\hypertarget{remove-people-with-futime-0-n14-6005---5991-14}{%
+\subsubsection{Remove people with futime = 0 (n=14) 6005 - 5991 =
+14}\label{remove-people-with-futime-0-n14-6005---5991-14}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df5 =}\StringTok{ }\NormalTok{df4[}\KeywordTok{which}\NormalTok{(}\OperatorTok{!}\NormalTok{(df4}\OperatorTok{$}\NormalTok{futime }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{)), ]}
+\KeywordTok{dim}\NormalTok{(df5)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 5991   25
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{dim}\NormalTok{(df4)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 6005   25
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{dim}\NormalTok{(df4) }\OperatorTok{-}\StringTok{ }\KeywordTok{dim}\NormalTok{(df5)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 14  0
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{table}\NormalTok{(df4}\OperatorTok{$}\NormalTok{futime }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## FALSE  TRUE 
+##  5991    14
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{table}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(df5}\OperatorTok{$}\NormalTok{futime))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## FALSE 
+##  5991
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{with}\NormalTok{(df5, }\KeywordTok{table}\NormalTok{(event, UMN_Iron_Subcohort, DR224_FU_BCInvD_Event_Serum))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## , , DR224_FU_BCInvD_Event_Serum = 0
+## 
+##      UMN_Iron_Subcohort
+## event    0    1
+##     0    9 2978
+##     1    0    0
+## 
+## , , DR224_FU_BCInvD_Event_Serum = 1
+## 
+##      UMN_Iron_Subcohort
+## event    0    1
+##     0    0    0
+##     1 2784  220
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{with}\NormalTok{(df5, }\KeywordTok{sum}\NormalTok{(}\KeywordTok{table}\NormalTok{(event, UMN_Iron_Subcohort, DR224_FU_BCInvD_Event_Serum)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 5991
+\end{verbatim}
+
+\hypertarget{remove-people-with-uncertain-event-status-following-case-cohort-sampling-n9-5991---5982-9}{%
+\subsubsection{Remove people with uncertain event status following
+case-cohort sampling (n=9) 5991 - 5982 =
+9}\label{remove-people-with-uncertain-event-status-following-case-cohort-sampling-n9-5991---5982-9}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# there are 9 people who are not in subcohort and do not have an event according}
+\CommentTok{# to the 'FU_BCInvD_Event' variable They are people who were cases in v6 but not}
+\CommentTok{# in v7 (see 4/15/2020 email from Deb Bookwalter).  These 9 who were cases in}
+\CommentTok{# release 6 but not in release 7}
+
+\KeywordTok{with}\NormalTok{(df5, }\KeywordTok{table}\NormalTok{(subcohort, event))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##          event
+## subcohort    0    1
+##         0    9 2784
+##         1 2978  220
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# there are 9 people who are not in subcohort and do not have an event according}
+\CommentTok{# to the 'FU_BCInvD_Event' variable}
+\KeywordTok{with}\NormalTok{(df5, }\KeywordTok{table}\NormalTok{(subcohort, event, FU_BC_Event))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## , , FU_BC_Event = 0
+## 
+##          event
+## subcohort    0    1
+##         0    5    0
+##         1 2962    0
+## 
+## , , FU_BC_Event = 1
+## 
+##          event
+## subcohort    0    1
+##         0    4 2772
+##         1   12  220
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{with}\NormalTok{(df5, }\KeywordTok{table}\NormalTok{(subcohort, event, SCL_BC_Event, }\DataTypeTok{useNA =} \StringTok{"always"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## , , SCL_BC_Event = 0
+## 
+##          event
+## subcohort    0    1 <NA>
+##      0       0    0    0
+##      1    1750   35    0
+##      <NA>    0    0    0
+## 
+## , , SCL_BC_Event = 1
+## 
+##          event
+## subcohort    0    1 <NA>
+##      0       0 1654    0
+##      1       7  140    0
+##      <NA>    0    0    0
+## 
+## , , SCL_BC_Event = NA
+## 
+##          event
+## subcohort    0    1 <NA>
+##      0       9 1130    0
+##      1    1221   45    0
+##      <NA>    0    0    0
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{miss.event =}\StringTok{ }\NormalTok{df5[}\KeywordTok{which}\NormalTok{(df5}\OperatorTok{$}\NormalTok{subcohort }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{&}\StringTok{ }\NormalTok{df5}\OperatorTok{$}\NormalTok{event }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{), ]}\OperatorTok{$}\NormalTok{PSID}
+\NormalTok{miss.event}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "00224_200085" "00224_206789" "00224_212188" "00224_213386" "00224_218075"
+## [6] "00224_219495" "00224_231861" "00224_235235" "00224_240490"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df6 =}\StringTok{ }\NormalTok{df5[}\KeywordTok{which}\NormalTok{(}\OperatorTok{!}\NormalTok{(df5}\OperatorTok{$}\NormalTok{PSID }\OperatorTok{%in%}\StringTok{ }\NormalTok{miss.event)), ]}
+\KeywordTok{dim}\NormalTok{(df6)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 5982   25
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{dim}\NormalTok{(df5)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 5991   25
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{dim}\NormalTok{(df5) }\OperatorTok{-}\StringTok{ }\KeywordTok{dim}\NormalTok{(df6)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 9 0
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{head}\NormalTok{(}\KeywordTok{data.frame}\NormalTok{(df5)[df5}\OperatorTok{$}\NormalTok{PSID }\OperatorTok{==}\StringTok{ "00224_200085"}\NormalTok{, ])}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##             PSID event baseline.age FU_BCInvD_EOFAgeExact FU_BCInvD_EOFAge
+## 320 00224_200085     0         59.5                    71               71
+##            HH_PSID UMN_Iron_Subcohort UMN_Iron UMN_Iron_SCL_BCInvD_Event
+## 320 00224_80200085                  0        1                         1
+##     UMN_Iron_Baseline_FE UMN_Iron_Baseline_FERTN UMN_Iron_Baseline_FESAT
+## 320                  111                     132                      37
+##     UMN_Iron_Baseline_UIBC FU_BCInvD_DxAgeExactMax FU_BCInvD_DxAgeExactMin
+## 320                    188                      NA                      NA
+##     DR224_FU_BCInvD_Event_Serum FU_BC_Event SCL_BC_Event futime start.age c.age
+## 320                           0           0           NA   11.5      59.5    71
+##     iron.study subcohort event.zap median
+## 320          1         0         0     NA
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{table}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(df6}\OperatorTok{$}\NormalTok{futime))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## FALSE 
+##  5982
+\end{verbatim}
+
+\hypertarget{remove-participants-who-are-missing-at-least-one-iron-measure-5982---5926-56}{%
+\subsubsection{Remove participants who are missing at least one iron
+measure (5982 - 5926 =
+56)}\label{remove-participants-who-are-missing-at-least-one-iron-measure-5982---5926-56}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(}\KeywordTok{as_factor}\NormalTok{(df6}\OperatorTok{$}\NormalTok{UMN_Iron_Baseline_FE))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##      74      82      85      98      89      78      88     102      79      81 
+##      94      94      93      92      88      85      84      84      82      82 
+##      91      87     105      90      96      93      83      77      86      94 
+##      82      81      81      80      80      79      78      77      77      76 
+##      92      72      97      70      69      99     100      67     108      95 
+##      74      73      73      72      70      70      68      67      67      66 
+##     103      71      80      84     106     104     101     110      75      64 
+##      66      65      64      64      64      63      62      62      61      59 
+##     113      68      76      73      66     111     120      65      61     114 
+##      59      58      58      57      55      55      53      52      51      51 
+##     121     115     122     109     112     119     118     107      57     131 
+##      51      50      50      49      49      48      47      46      45      45 
+##     117     126      60      62      63     116      54     124      58     123 
+##      44      43      42      42      42      42      40      40      39      38 
+##      59     132     133      55      56     136     128     129      51     127 
+##      37      37      37      36      36      36      35      35      34      34 
+##     134     137     125     130     138     135     140      49     141      53 
+##      33      33      31      31      31      30      27      25      24      23 
+##      48     144     150      47     143     146      43     142 (Other)    NA's 
+##      22      22      21      20      20      20      19      19     643      91
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df7 =}\StringTok{ }\NormalTok{df6[}\OperatorTok{!}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(df6}\OperatorTok{$}\NormalTok{UMN_Iron_Baseline_FE)) }\OperatorTok{|}\StringTok{ }\OperatorTok{!}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(df6}\OperatorTok{$}\NormalTok{UMN_Iron_Baseline_FERTN)) }\OperatorTok{|}\StringTok{ }
+\StringTok{    }\OperatorTok{!}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(df6}\OperatorTok{$}\NormalTok{UMN_Iron_Baseline_FESAT)), ]}
+
+\KeywordTok{dim}\NormalTok{(df7)  }\CommentTok{# with at least one non-missing iron val, 5926}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 5926   25
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{dim}\NormalTok{(df6) }\OperatorTok{-}\StringTok{ }\KeywordTok{dim}\NormalTok{(df7)  }\CommentTok{# remove 56 with missing baseline iron values}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 56  0
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{dim}\NormalTok{(df6)  }\CommentTok{# 5982 - 5926 = 56 }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 5982   25
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{table}\NormalTok{(df6}\OperatorTok{$}\NormalTok{subcohort)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##    0    1 
+## 2784 3198
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(}\KeywordTok{as_factor}\NormalTok{(df3}\OperatorTok{$}\NormalTok{UMN_Iron_Baseline_FE))}
+\KeywordTok{summary}\NormalTok{(}\KeywordTok{as_factor}\NormalTok{(df3}\OperatorTok{$}\NormalTok{UMN_Iron_Baseline_FESAT))}
+\KeywordTok{summary}\NormalTok{(}\KeywordTok{as_factor}\NormalTok{(df3}\OperatorTok{$}\NormalTok{UMN_Iron_Baseline_FERTN))}
+\KeywordTok{summary}\NormalTok{(}\KeywordTok{as_factor}\NormalTok{(df3}\OperatorTok{$}\NormalTok{UMN_Iron_Baseline_UIBC))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Source: https://cran.r-project.org/web/packages/summarytools/vignettes/Recommendations-rmarkdown.html}
+\KeywordTok{st_options}\NormalTok{(}\DataTypeTok{bootstrap.css     =} \OtherTok{FALSE}\NormalTok{,       }\CommentTok{# Already part of the theme so no need for it}
+           \DataTypeTok{plain.ascii       =} \OtherTok{FALSE}\NormalTok{,       }\CommentTok{# One of the essential settings}
+           \DataTypeTok{style             =} \StringTok{"rmarkdown"}\NormalTok{, }\CommentTok{# Idem.}
+           \DataTypeTok{dfSummary.silent  =} \OtherTok{TRUE}\NormalTok{,        }\CommentTok{# Suppresses messages about temporary files}
+           \DataTypeTok{footnote          =} \OtherTok{NA}\NormalTok{,          }\CommentTok{# Keeping the results minimalistic}
+           \DataTypeTok{subtitle.emphasis =} \OtherTok{FALSE}\NormalTok{)       }\CommentTok{# For the vignette theme, this gives}
+                                            \CommentTok{# much better results. Your mileage may vary.}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df3.sub =}\StringTok{ }\NormalTok{df3[}\KeywordTok{c}\NormalTok{(}\StringTok{"UMN_Iron_Baseline_FE"}\NormalTok{, }\StringTok{"UMN_Iron_Baseline_FESAT"}\NormalTok{, }\StringTok{"UMN_Iron_Baseline_FERTN"}\NormalTok{, }
+    \StringTok{"UMN_Iron_Baseline_UIBC"}\NormalTok{)]}
+\KeywordTok{head}\NormalTok{(df3.sub)}
+\CommentTok{# Source:}
+\CommentTok{# https://dabblingwithdata.wordpress.com/2018/01/02/my-favourite-r-package-for-summarising-data/}
+\KeywordTok{dfSummary}\NormalTok{(df3.sub, }\DataTypeTok{style =} \StringTok{"grid"}\NormalTok{, }\DataTypeTok{graph.magnif =} \FloatTok{0.75}\NormalTok{, }\DataTypeTok{tmp.img.dir =} \StringTok{"/tmp"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{psid.include =}\StringTok{ }\NormalTok{df7}\OperatorTok{$}\NormalTok{PSID}
+\KeywordTok{length}\NormalTok{(psid.include)  }\CommentTok{# 5926}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 5926
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{save}\NormalTok{(psid.include, }\DataTypeTok{file =} \StringTok{"ids-include.RData"}\NormalTok{)}
+
+\KeywordTok{table}\NormalTok{(df7}\OperatorTok{$}\NormalTok{subcohort, df7}\OperatorTok{$}\NormalTok{event)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    
+##        0    1
+##   0    0 2757
+##   1 2952  217
+\end{verbatim}
+
+\begin{figure}
+\centering
+\includegraphics{../sections/flow-sample-cch.png}
+\caption{Exclusions}
+\end{figure}
+
+\end{document}

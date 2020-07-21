@@ -1,0 +1,1059 @@
+---
+title: "Post-hoc 7: Stratify the primary analyses by racial ethnic groups and BMI (case-cohort analysis)"
+output:
+  pdf_document:
+    toc: yes
+    number_sections: true
+    includes:
+      in_header: header.tex 
+  html_document:
+    theme: united
+    toc: yes
+geometry: margin=1.5cm
+editor_options:
+  chunk_output_type: console
+always_allow_html: true
+---
+
+# Table 2. Association between iron status and breast cancer risk (case-cohort analysis)
+
+```{r , include=FALSE}
+knitr::opts_chunk$set(echo = T, 
+                      results = 'markup',
+                      warning = F,
+                      fig.width=10,
+                      fig.height=8)
+
+```
+
+
+```{r, include=F}
+# bring in packages
+require(knitr)
+require(data.table)
+require(tableone)
+require(ggplot2)
+require(kableExtra)
+require(rowr)
+require(survival)
+require(stargazer)
+require(splines)
+require(ggplot2)
+require(survminer)
+require(dplyr)
+require(reshape2)
+require(ggpubr)
+require(tools)
+require(Hmisc)
+require(janitor)
+require(foreign)
+require(haven)
+
+```
+
+
+```{r}
+
+# source: section1.Rmd
+load(file="../sections/updated-data-iron.RData") # df3 is the iron subset
+names(df3)
+
+df=data.frame(df3[df3$subcohort %in% c(0,1),])
+dim(df)
+with(df[df$SE_RACE15==5,], table(subcohort, event))
+
+table(as_factor(df$SE_RACE15))
+table(as_factor(df$SE_RACE_ETH))
+
+```
+
+
+```{r}
+
+# handle data for survival analysis
+df = within(df, {
+
+  fe.log = log(UMN_Iron_Baseline_FE)
+  fertn.log = log(UMN_Iron_Baseline_FERTN)
+  fesat.log = log(UMN_Iron_Baseline_FESAT)
+  tibc.log = log(UMN_Iron_Baseline_TIBC)
+  uibc.log = log(UMN_Iron_Baseline_UIBC)
+    
+  fe.scale = scale(log(UMN_Iron_Baseline_FE), scale=F)
+  fertn.scale = scale(log(UMN_Iron_Baseline_FERTN), scale=F)
+  fesat.scale = scale(log(UMN_Iron_Baseline_FESAT), scale=F)
+  tibc.scale = scale(log(UMN_Iron_Baseline_TIBC), scale=F)
+  uibc.scale = scale(log(UMN_Iron_Baseline_UIBC), scale=F)
+})
+
+summary(df$futime)
+summary(df$c.age)
+summary(df$FU_BCInvD_EOFAge)
+summary(df$FU_BCInvD_EOFAgeExact)
+sapply(df[c('alc.f3', 'educ.f2', 'ever.hrt.f', 'birth.control.f',
+                     'age.menarche', 'age.firstbirth.cat')], summary)
+                     
+confounder.list = c('alc.f3',  'educ.f2', 'bmi', 'menop.status', 'menop.status:bmi', 
+                     'age.menarche', 'age.firstbirth.cat')
+
+outcome.vars = c("fe", "fertn", "fesat")
+
+# time-dept menopause ==============================
+
+summary(df$fu.meno.age) # 892 missing
+df$miss.meno.age = with(df, is.na(df$fu.meno.age))
+with(df, table(miss.meno.age, menop.status)) # a few people are post-menopausal at baseline but no age at menopause. Put age at menopause at baseline age.
+
+# take only non-missing iron values
+dim(df)
+df =  df[complete.cases(df[outcome.vars]),]
+dim(df)
+
+df$fu.meno.age.rev = with(df, ifelse( is.na(fu.meno.age)==T & menop.status==1, baseline.age,
+                                    ifelse(is.na(fu.meno.age)==T & menop.status==0, 99, fu.meno.age )))
+summary(df$fu.meno.age.rev)
+
+df$miss.meno.age.rev = with(df, is.na(df$fu.meno.age.rev))
+with(df, table(miss.meno.age.rev, menop.status)) # check
+
+dim(df)
+
+
+```
+
+
+```{r}
+# PCA code
+
+# Source: https://raw.githubusercontent.com/WinVector/Examples/master/PCR/XonlyPCA.Rmd
+extractProjection <- function(ndim,princ) {
+  # pull off the rotation.  
+  proj <- princ$rotation[,1:ndim] 
+  # sign was arbitrary, so flip in convenient form
+  for(i in seq_len(ndim)) {
+    si <- sign(mean(proj[,i]))
+    if(si!=0) {
+      proj[,i] <- proj[,i]*si
+    }
+  }
+  proj
+}
+
+```
+
+```{r}
+# get first PC
+
+iron.vars = c("fe", 'fesat', "fertn")
+iron.log.vars = c("fe.log", "fesat.log", "fertn.log")
+
+# Source: http://www.win-vector.com/blog/2016/05/pcr_part1_xonly/
+m.df = as.matrix(df[iron.log.vars]) # use complete cases
+
+pca.log = prcomp(m.df, center=T, scale.=T) # scale variables because units are not same across 3 measures.
+
+# signs are arbitrary on PCA, so instead of calling predict we pull out
+# (and alter) the projection by hand
+
+projectedTrainIdeal <-
+  as.data.frame(scale(m.df) %*% extractProjection(3,pca.log),
+                                 stringsAsFactors = FALSE)
+head(projectedTrainIdeal)
+head(m.df)
+
+df.pc = cbind(projectedTrainIdeal, df)
+with(df.pc, cor(PC1, fe))
+
+```
+
+
+```{r}
+
+# function to output HR with 95% ci =========================
+get.ci = function(df){
+  
+  colnames(df)[which(colnames(df) %in% c("SE"))] = "se.coef"
+  colnames(df)[which(colnames(df) %in% c("p"))] = "p.value"
+  colnames(df)[which(colnames(df) %in% c("Value"))] = "coef"
+
+  
+with(data.frame(df), paste0(formatC(round(exp(coef),2), format="f", flag='0', digits=2),
+                                  " (",
+                                  formatC(round(exp(coef-1.96*se.coef),2), format="f", digits=2),
+                                  ", ",
+                                  formatC(round(exp(coef+1.96*se.coef),2), format="f", digits=2),
+                                  ")")
+)
+
+  # source: https://stackoverflow.com/questions/50118394/selecting-and-colouring-single-table-cells-with-kableextra-in-r-markdown-cell-sp
+  # if you want to bold cells that have p-values < 0.05
+   # with(data.frame(df),  ifelse(p.value < 0.05, # no Bonferroni correction
+   #                              paste0("\\textbf{",
+   #                                     formatC(round(exp(coef),2), format="f", flag='0', digits=2),
+   #                                     " (",
+   #                                    formatC(round(exp(coef-1.96*se.coef),2), format="f", digits=2),
+   #                                    ", ",
+   #                                    formatC(round(exp(coef+1.96*se.coef),2), format="f", digits=2),
+   #                                    ")}"),
+   #      paste0(formatC(round(exp(coef),2), format="f", flag='0', digits=2),
+   #                                " (",
+   #                                formatC(round(exp(coef-1.96*se.coef),2), format="f", digits=2),
+   #                                ", ",
+   #                                formatC(round(exp(coef+1.96*se.coef),2), format="f", digits=2),
+   #                                ")")))
+  }
+
+```
+
+
+```{r}
+
+# make a function of the previous analyses repeating over covariates.
+table(df$SE_RACE_ETH)
+table(as_factor(df$EX_BMI_CDC_final))
+#table(df.pc$bmi2)
+
+get.coefs = function(var.fe, n.size=50884, dfsub, sub.label, bmi="no") {
+
+# bmi="no"; var.fe = "fe" ; n.size=50884 ; dfsub = df[df$SE_RACE_ETH==1,]; sub.label = 'white'  # debug
+#dfsub=df2[!(is.na(df2$bmi2)) & df2$bmi2=="2) 18.5-24.9",]
+  
+# bmi="yes"; var.fe = "fe"; dfsub=df.pc[!(is.na(df.pc$bmi2)) & df.pc$bmi2=="4) 30+",]; n.size=50884; sub.label="obese"
+  
+# bmi="yessmall"; var.fe = "PC1"; dfsub=df.pc[!(is.na(df.pc$bmi2)) & df.pc$bmi2=="4) 30+",]; n.size=50884; sub.label="obese" # NOTE: the bmi2 variable is created below this function.
+
+# bmi="yes"; var.fe = "fertn.log"; dfsub=df.pc[!(is.na(df.pc$bmi2)) & df.pc$bmi2=="4) 30+",]; n.size=50884; sub.label="obese"
+
+df1 = dfsub
+dim(dfsub)
+
+# designate the iron covariate  
+df1$iron.cov = df1[,var.fe] # source: https://stackoverflow.com/questions/2641653/pass-a-data-frame-column-name-to-a-function
+
+df1=df1[which(!(is.na(df1$iron.cov))),] # need to remove missing for cch to work
+summary(df1$iron.cov)
+
+# get quartiles
+qrts = quantile(df1$iron.cov, c(0, 0.25, 0.5, 0.75, 1), na.rm=T)
+qrts
+qrts2 = quantile(exp(df1$iron.cov), c(0, 0.25, 0.5, 0.75, 1), na.rm=T)
+#qrts = quantile(df1$iron.cov, c(0, 0.1, 0.5, 0.9, 1), na.rm=T)
+qrts2
+
+# make a variable with cut points based on quartiles above
+df1$fe.cutq = cut(df1$iron.cov, qrts, include.lowest = T, dig.lab=10)
+df1$fe.cutq2 = cut(exp(df1$iron.cov), qrts2, include.lowest = T, dig.lab=4)
+df1$fe.cutq.round = cut(df1$iron.cov, round(qrts,1), include.lowest = T, dig.lab=10)
+table(df1$fe.cutq.round)
+table(df1$fe.cutq2)
+
+# what is the median within those intervals? =====================
+
+dt = data.table(df1)
+setkey(dt, fe.cutq)
+summary(dt$iron.cov)
+summary(df1$iron.cov)
+
+medians = dt[,list(median=median(iron.cov, na.rm=T)), by=fe.cutq]
+medians = data.frame(medians[complete.cases(medians)])
+medians
+
+# rounded medians =====================
+setkey(dt, fe.cutq.round)
+medians.round = dt[,list(median=median(iron.cov, na.rm=T)), by=fe.cutq.round]
+medians.round = data.frame(medians.round[complete.cases(medians.round)])
+medians.round
+
+# get median of untransformed serum iron marker
+medians.orig = if(var.fe %in% c("fertn.log")) {
+  setkey(dt, fe.cutq2); dt[,list(median=median(exp(iron.cov), na.rm=T)), by=fe.cutq2]} else {
+  setkey(dt, fe.cutq); dt[,list(median=median(iron.cov, na.rm=T)), by=fe.cutq]
+  }
+medians.orig = data.frame(medians.orig[complete.cases(medians.orig),])
+
+# get untransformed values if log transform ferritin
+if(var.fe=="fertn.log") {
+  qrts = quantile(df1$fertn.log, c(0, 0.25, 0.5, 0.75, 1), na.rm=T)
+  qrts2 = quantile(df1$fertn, c(0, 0.25, 0.5, 0.75, 1), na.rm=T)
+  
+  df1$fe.cutq = cut(df1$fertn.log, qrts, include.lowest = T, dig.lab=4)
+  df1$fe.cutq2 = cut(df1$fertn, qrts2, include.lowest = T, dig.lab=4)
+  
+  table(is.na(df1$fe.cutq)); table(df1$fe.cutq)
+  table(is.na(df1$fe.cutq2)); table(df1$fe.cutq2)
+  
+  dt.extra = data.table(df1)
+  setkey(dt.extra, fe.cutq2)
+  medians =  dt.extra[,list(median=median(fertn, na.rm=T)), by=fe.cutq2]
+  medians = data.frame(medians[complete.cases(medians)])
+} else {
+  # get quartiles
+qrts = quantile(df1$iron.cov, c(0, 0.25, 0.5, 0.75, 1), na.rm=T)
+#qrts = quantile(df1$iron.cov, c(0, 0.1, 0.5, 0.9, 1), na.rm=T)
+qrts
+
+# make a variable with cut points based on quartiles above
+df1$fe.cutq = cut(df1$iron.cov, qrts, include.lowest = T)#, dig.lab=4)
+
+# what is the median within those intervals? =====================
+dt = data.table(df1)
+setkey(dt, fe.cutq)
+
+medians = dt[,list(median=median(iron.cov, na.rm=T)), by=fe.cutq]
+medians = data.frame(medians[complete.cases(medians)])
+medians
+}
+
+
+# 1) Cox ph with quartiles ==================================
+
+cox.qrt = cch(Surv(start.age, c.age, event) ~ fe.cutq , # + cluster(HH_PSID) # NOTE: clustering does not work
+             data=df1,
+             subcoh = ~subcohort,
+             id = ~ PSID,
+             cohort.size=n.size)
+cox.qrt
+cq = coef(summary(cox.qrt))
+
+sub.label2 = paste0(sub.label, " (n=", cox.qrt$n, ", subcohort n=", cox.qrt$subcohort.size, ")"); sub.label2
+
+coefs.qrts = get.ci(cq)[1:3]; coefs.qrts
+n.event = summary(cox.qrt)$subcohort.size
+
+tbl.qrt = kable(coef(summary(cox.qrt)), booktabs=T, 
+                caption=paste0("iron.cov = ", var.fe, ", subgroup = ", sub.label)) %>%
+  kable_styling(latex_options = c("HOLD_position"), full_width = F)
+
+# Cox ph with continuous covariate ===========================
+# ========================================================================
+
+df1 = within(df1, 
+             quartile.cov <- as.integer(cut(iron.cov, quantile(iron.cov, probs=0:4/4),
+                                                             include.lowest=T)))
+
+cox.lin = cch(Surv(start.age, c.age, event) ~ quartile.cov,
+             data=df1,
+             subcoh = ~subcohort,
+                  id = ~PSID,
+                  cohort.size = n.size)
+cox.lin
+cc = coef(summary(cox.lin))
+
+# output coef with 95% ci
+coefs.c = get.ci(cc)[1]
+coefs.c
+coefs.c.p = formatC(round(cc[1,4],3), format="f", digits=3)
+
+
+# output coef with 95% ci
+coefs.lin = get.ci(cc)[1]
+coefs.lin
+
+tbl.lin = kable(coef(summary(cox.lin)), booktabs=T,
+               caption=paste0("iron.cov = ", var.fe, ", subgroup = ", sub.label)) %>%
+  kable_styling(latex_options = c("HOLD_position"), full_width = F)
+
+
+# Adjusted results for quartile analyses
+# ==============================================
+
+sapply(df1[c("menop.age", "time.since.menop", "yrs.mens", "early.menop.45", "age.menarche", "parity")], summary) # check
+sapply(df1[c("menop.age", "time.since.menop", "yrs.mens", "early.menop.45", "age.menarche", "parity")], class) # check
+
+
+confounder.list.baseline = c('bmi', "early.menop.45", "bmi:early.menop.45")
+list.cc = c('bmi', "early.menop.45")#menop.status.f")
+
+confounder.list.baseline.cc.small = c("early.menop.45")
+list.cc.small = c("early.menop.45")
+
+confounder.list.baseline.nobmi = c('alc.f4',  'educ.f2',  'birth.control.f', "ever.hrt.f", 'smoke.f2',
+                     'age.menarche', 'age.firstbirth.cat', "early.menop.45")#, "menop.status.f")
+list.cc.nobmi = c('alc.f4', 'educ.f2', 'birth.control.f', "ever.hrt.f", 'smoke.f2',
+                     'age.menarche', 'age.firstbirth.cat', "early.menop.45")#, "menop.status.f")
+
+# if stratified by BMI then exclude from list of covariates/confounders
+
+summary(df1[complete.cases(df1[list.cc.small]),c("fe.cutq", "early.menop.45")])
+
+if(bmi=="no"){ # if no bmi strata then adjust for smaller list of variables
+  form.qrt.adj = as.formula(paste0("Surv(start.age, c.age, event) ~ ", 
+                         paste0(c("fe.cutq",
+                                  confounder.list.baseline), collapse = " + ")))
+  cox.qrt.adj= cch(form.qrt.adj,
+                  data=df1[complete.cases(df1[list.cc]),], # take only complete cases
+                  subcoh = ~subcohort,
+                  id = ~PSID,
+                  cohort.size = n.size)
+} else if (bmi=="yessmall") {
+  form.qrt.adj = as.formula(paste0("Surv(start.age, c.age, event) ~ ", 
+                         paste0(c("fe.cutq",
+                                  confounder.list.baseline.cc.small), collapse = " + ")))
+  cox.qrt.adj= cch(form.qrt.adj,
+                  data=df1[complete.cases(df1[list.cc.small]),], # take only complete cases
+                  subcoh = ~subcohort,
+                  id = ~PSID,
+                  cohort.size = n.size)
+} else if (bmi=="yes") {
+  form.qrt.adj = as.formula(paste0("Surv(start.age, c.age, event) ~ ", 
+                         paste0(c("fe.cutq",
+                                  confounder.list.baseline.nobmi), collapse = " + ")))
+  coxph(form.qrt.adj, data=df1)
+  cox.qrt.adj= cch(form.qrt.adj,
+                  data=df1[complete.cases(df1[list.cc.nobmi]),], # take only complete cases
+                  subcoh = ~subcohort,
+                  id = ~PSID,
+                  cohort.size = n.size)
+}
+
+cox.qrt.adj
+cqa = coef(summary(cox.qrt.adj))
+
+# output coef with 95% ci
+coefs.qrts.adj = get.ci(cqa)[1:3]
+coefs.qrts.adj
+n.event.adj = summary(cox.qrt.adj)$nevent
+
+tbl.qrt.adj = kable(coef(summary(cox.qrt.adj)), booktabs=T,
+                    caption=paste0("iron.cov = ", var.fe))  %>%
+  kable_styling(latex_options = c("HOLD_position"), full_width = F)
+
+
+# Cox ph with continuous covariate, adjusted =========================
+# ==========================================================================
+
+if(bmi=="no"){ # if no bmi strata then adjust for smaller list of variables
+  form.lin.adj = as.formula(paste0("Surv(start.age, c.age, event) ~ ", 
+                           paste0(c("quartile.cov",
+                                    confounder.list.baseline), collapse = " + ")))
+  
+  cox.lin.adj= cch(form.lin.adj,
+                    data=df1[complete.cases(df1[list.cc]),], # take only complete cases
+                    subcoh = ~subcohort,
+                    id = ~PSID,
+                    cohort.size = n.size)
+} else if (bmi=="yessmall") {
+  form.lin.adj = as.formula(paste0("Surv(start.age, c.age, event) ~ ", 
+                           paste0(c("quartile.cov",
+                                    confounder.list.baseline.cc.small), collapse = " + ")))
+  
+  cox.lin.adj= cch(form.lin.adj,
+                    data=df1[complete.cases(df1[list.cc.small]),], # take only complete cases
+                    subcoh = ~subcohort,
+                    id = ~PSID,
+                    cohort.size = n.size)
+
+} else if (bmi=="yes") {
+  form.lin.adj = as.formula(paste0("Surv(start.age, c.age, event) ~ ", 
+                           paste0(c("quartile.cov",
+                                    confounder.list.baseline.nobmi), collapse = " + ")))
+  
+  cox.lin.adj= cch(form.lin.adj,
+                    data=df1[complete.cases(df1[list.cc.nobmi]),], # take only complete cases
+                    subcoh = ~subcohort,
+                    id = ~PSID,
+                    cohort.size = n.size)
+
+}
+
+
+cox.lin.adj
+ca = coef(summary(cox.lin.adj))
+
+# output coef with 95% ci
+coefs.ca = get.ci(ca)[1]; coefs.ca
+coefs.ca.p = formatC(round(ca[1,4],3), format="f", digits=3)
+
+# output coef with 95% ci
+coefs.lin.adj = get.ci(ca)[1]; coefs.lin.adj
+
+tbl.lin.adj = kable(coef(summary(cox.lin.adj)), booktabs=T, 
+                    caption=paste0("iron.cov = ", var.fe))  %>%
+  kable_styling(latex_options = c("HOLD_position"), full_width = F)
+
+
+# make data frame of results
+# ===============================================================
+
+colnames(medians)[1]="fe.cutq" # fix for the log transformed analyses
+
+df.info.adj = data.frame(cov.fe = var.fe,
+                      groups = c( "ref", levels(medians.round[,"fe.cutq.round"])[2:4], "cont"),
+                      coef =   c( "ref", coefs.qrts.adj, coefs.lin.adj),
+                      adj = "Yes",
+                      sub = sub.label2)
+
+df.info.unadj = data.frame(cov.fe = var.fe,
+                      groups = c("ref", levels(medians.round[,"fe.cutq.round"])[2:4], "cont"),
+                      coef = c( "ref", coefs.qrts, coefs.lin), 
+                      adj="No",
+                      sub = sub.label2)
+
+
+if(var.fe=="PC1") {
+  df.info.ranges = data.frame(cov.fe = var.fe,
+                      groups =c("ref", levels(medians[,"fe.cutq"])[2:4], "cont"),
+                      coef =  c(levels(medians[,"fe.cutq"])[1:4], NA),
+                      adj="Ranges",
+                      sub = sub.label2)
+  } else {
+    df.info.ranges = data.frame(cov.fe = var.fe,
+                      groups =c("ref", levels(medians[,"fe.cutq"])[2:4], "cont"),
+                      coef =  c(levels(medians[,"fe.cutq"])[1:4], NA),
+                      adj="Ranges",
+                      sub = sub.label2)
+                    }
+
+df.info.median = data.frame(cov.fe = var.fe,
+                      groups = c("ref", levels(medians.round[,"fe.cutq.round"])[2:4], "cont"),
+                      coef = c(formatC(round(medians[,"median"],0), format="f", digits=0), NA),
+                      adj="Median",
+                      sub = sub.label2)
+
+df.info  = rbind.data.frame(df.info.median,
+                            df.info.unadj, 
+                            df.info.adj,
+                            df.info.ranges)
+
+# put all this info into a list of objects to output from the function =====================
+
+return(list(df.info, tbl.qrt, tbl.lin))
+
+}
+
+table(as_factor(df$SE_RACE_ETH))
+dfsub1 = df[df$SE_RACE_ETH==2,]
+get.coefs( var.fe = "UMN_Iron_Baseline_FE", dfsub = dfsub1, sub.label="Hispanic")[[1]] # check
+get.coefs( var.fe = "fertn.log", dfsub = dfsub1, sub.label="Hispanic")[[1]] # check
+
+```
+
+
+```{r}
+
+# Run function over all five covariates
+
+o.vars = c("fe", "fertn.log", "fesat", "PC1")
+outcome.vars2 = c("fe.scale", "fertn.scale", "fesat.scale", "tibc.scale", "uibc.scale")
+
+names(df)
+
+outcome.vars3 = c("UMN_Iron_Baseline_FE",
+                  "UMN_Iron_Baseline_FERTN",
+                  "UMN_Iron_Baseline_FESAT",
+                  "UMN_Iron_Baseline_TIBC",
+                  "UMN_Iron_Baseline_UIBC")
+
+get.coefs( var.fe = "UMN_Iron_Baseline_FE", dfsub = dfsub1, sub.label="white") # check
+get.coefs( var.fe = "PC1", dfsub = df.pc, sub.label="white")[[1]] # check
+# get.coefs( var.fe = "fertn.log", dfsub=df.pc[!(is.na(df.pc$bmi2)) & df.pc$bmi2=="4) 30+",],
+#            sub.label="Obese: 30+")
+
+```
+
+```{r}
+# Run each model separately by racial/ethnic groups
+
+table(as_factor(df$SE_RACE_ETH))
+
+race.dat = mapply(get.coefs, 
+       o.vars,
+       dfsub = rep(list(df.pc[df.pc$SE_RACE_ETH==0,],
+                        df.pc[df.pc$SE_RACE_ETH==1,],
+                        df.pc[df.pc$SE_RACE_ETH==2,]),
+                   each=4), # repeat for each of 3 biomarkers
+       sub.label = rep(c("White, non-Hispanic",
+                         "Black, non-Hispanic",
+                         "Hispanic"), each=4),
+       bmi="no")
+
+l.tot = length(race.dat);
+
+race.tables = race.dat[ seq(1, l.tot, by=3)] 
+race.models = race.dat[seq(2,l.tot, by=3)] # even nums
+race.models.lin = race.dat[seq(3,l.tot, by=3)] # even nums
+
+# combine all tables together
+race.df = race.tables %>% bind_rows()
+race.df
+
+```
+
+
+```{r}
+
+levels(factor(race.df$adj))
+levels(factor(race.df$cov.fe))
+levels(factor(race.df$sub))
+
+race.df$cov.fe = factor(race.df$cov.fe,
+                           levels=c("fe", "fertn.log", "fesat", "PC1"),
+                           labels=c("Iron ($\\mu$g/dL)", 
+                                    "Ferritin$^b$ ($\\mu$g/dL)", 
+                                    "Transferrin Saturation (\\%)", 
+                                    "First principal component"))
+
+race.df$adj = factor(race.df$adj, levels=c("Median", "Ranges", "No", "Yes"),
+                     labels=c("Median", "Ranges", "Unadjusted HR (95\\% CI)", "Adjusted$^a$ HR (95\\% CI)"))
+head(race.df)
+table(race.df$groups)
+race.df$quart = rep(c("ref", "Q2", "Q3", "Q4", "linear"), nrow(race.df)/5)
+head(race.df)
+
+
+
+# Change data to match table format from Quintana-Pacheco
+
+race.df.wide = dcast(race.df, cov.fe + sub + adj ~ quart, value.var="coef")
+race.df.wide
+
+```
+
+
+```{r}
+# Run each model separately by BMI groups
+
+bmi.names = names(table(as_factor(df$EX_BMI_CDC_final)))
+with(df, table(EX_BMI_CDC_final))
+summary(df$EX_BMI_CDC_final)
+
+# combine all obese into one category
+df.pc$bmi2 = factor(df.pc$EX_BMI_CDC_final,
+                  labels = c(bmi.names[1:3], rep("4) 30+", 3)))
+table(df.pc$bmi2)
+summary(df.pc$bmi2)
+levels(df.pc$bmi2)
+
+summary(df.pc[complete.cases(df.pc$bmi2) & df.pc$bmi2=="2) 18.5-24.9",]$bmi2)
+summary(df.pc[complete.cases(df.pc$bmi2) & df.pc$bmi2=="2) 18.5-24.9",]$subcohort)
+summary(df.pc[df.pc$EX_BMI_CDC_final==2,]$bmi2)
+
+# run function over all outcome and exposure variables
+bmi.dat = mapply(get.coefs, 
+       o.vars,
+       dfsub = rep(list(df.pc[!(is.na(df.pc$bmi2)) & df.pc$bmi2=="2) 18.5-24.9",],
+                        df.pc[!(is.na(df.pc$bmi2)) & df.pc$bmi2=="3) 25.0-29.9",],
+                        df.pc[!(is.na(df.pc$bmi2)) & df.pc$bmi2=="4) 30+",]),
+                   each=4), # repeat for each of 4 biomarkers
+       sub.label = rep(c("Normal: 18.5-24.9", "Overweight: 25.0-29.9", "Obese: 30+"), each=4),
+       bmi="yes")
+
+dim(bmi.dat)
+
+l.totb = length(bmi.dat); l.totb
+
+bmi.tables = bmi.dat[ seq(1, l.totb, by=3)] 
+bmi.models = bmi.dat[seq(2,l.totb, by=3)] 
+bmi.models.lin = bmi.dat[seq(3,l.totb, by=3)] 
+
+
+# combine all tables together
+bmi.dat.df = bmi.tables %>% bind_rows()
+bmi.dat.df
+
+ bmi.dat.df$sub = factor(bmi.dat.df$sub,
+                         levels = c("Normal: 18.5-24.9 (n=2094, subcohort n=1105)",
+                                    "Overweight: 25.0-29.9 (n=1839, subcohort n=942)",
+                                    "Obese: 30+ (n=1760, subcohort n=889)")) # NOTE: to revise order, must have the exact text, including the sample size
+
+```
+
+
+
+
+```{r}
+
+levels(factor(bmi.dat.df$adj))
+levels(factor(bmi.dat.df$cov.fe))
+levels(factor(bmi.dat.df$sub))
+
+bmi.dat.df$cov.fe = factor(bmi.dat.df$cov.fe,
+                           levels=c("fe", "fertn.log", "fesat", "PC1"),
+                           labels=c("Iron$^b$ ($\\mu$g/dL)", 
+                                    "Ferritin$^b$ ($\\mu$g/dL)", 
+                                    "Transferrin Saturation (\\%)",
+                                    "First principal component"))
+names(bmi.dat.df)
+
+
+# bmi.dat.df$sub = factor(bmi.dat.df$sub,
+#                         levels = c("Normal: 18.5-24.9", "Overweight: 25.0-29.9", "Obese: 30+"))
+
+
+bmi.dat.df$adj = factor(bmi.dat.df$adj, levels=c("Median", "Ranges", "No", "Yes"),
+                     labels=c("Median", "Ranges", "Unadjusted HR (95\\% CI)", "Adjusted$^a$ HR (95\\% CI)"))
+head(bmi.dat.df)
+bmi.dat.df$quart = rep(c("ref", "Q2", "Q3", "Q4", "linear"), nrow(bmi.dat.df)/5)
+head(bmi.dat.df)
+
+# Change data to match table format from Quintana-Pacheco
+
+bmi.dat.df.wide = dcast(bmi.dat.df, cov.fe + sub + adj ~ quart, value.var="coef")
+bmi.dat.df.wide
+
+```
+
+
+
+
+```{r}
+
+# Run each model separately by BMI groups
+# FOR THIS ITERATION, use smaller subset of confounders to see if difference.
+
+# run function over all outcome and exposure variables (only menopause)
+bmi.dat2 = mapply(get.coefs, 
+       o.vars,
+       dfsub = rep(list(df.pc[!(is.na(df.pc$bmi2)) & df.pc$bmi2=="2) 18.5-24.9",],
+                        df.pc[!(is.na(df.pc$bmi2)) & df.pc$bmi2=="3) 25.0-29.9",],
+                        df.pc[!(is.na(df.pc$bmi2)) & df.pc$bmi2=="4) 30+",]),
+                   each=4), # repeat for each of 4 biomarkers
+       sub.label = rep(c("Normal: 18.5-24.9", "Overweight: 25.0-29.9", "Obese: 30+"), each=4),
+       bmi="yessmall")
+
+
+l.totb = length(bmi.dat2); l.totb
+
+bmi.tables2 = bmi.dat2[ seq(1, l.totb, by=3)] 
+bmi.models2 = bmi.dat2[seq(2, l.totb, by=3)] 
+bmi.models.lin2 = bmi.dat2[seq(3, l.totb, by=3)] 
+
+
+# combine all tables together
+bmi.dat.df2 = bmi.tables2 %>% bind_rows()
+bmi.dat.df2
+
+
+```
+
+
+
+
+```{r}
+
+levels(factor(bmi.dat.df2$adj))
+levels(factor(bmi.dat.df2$cov.fe))
+levels(factor(bmi.dat.df2$sub))
+
+bmi.dat.df2$cov.fe = factor(bmi.dat.df2$cov.fe,
+                           levels=c("fe", "fertn.log", "fesat", "PC1"),
+                           labels=c("Iron ($\\mu$g/dL)", 
+                                    "Ferritin$^b$ ($\\mu$g/dL)", 
+                                    "Transferrin Saturation (\\%)",
+                                    "First principal component"))
+
+ bmi.dat.df2$sub = factor(bmi.dat.df2$sub,
+                         levels = c("Normal: 18.5-24.9 (n=2094, subcohort n=1105)",
+                                    "Overweight: 25.0-29.9 (n=1839, subcohort n=942)",
+                                    "Obese: 30+ (n=1760, subcohort n=889)")) # NOTE: to revise order, must have the exact text, including the sample size
+
+
+bmi.dat.df2$adj = factor(bmi.dat.df2$adj, levels=c("Median", "Ranges", "No", "Yes"),
+                     labels=c("Median", "Ranges", "Unadjusted HR (95\\% CI)", "Adjusted$^a$ HR (95\\% CI)"))
+
+tail(bmi.dat.df2,100)
+
+head(bmi.dat.df2)
+bmi.dat.df2$quart = rep(c("ref", "Q2", "Q3", "Q4", "linear"), nrow(bmi.dat.df2)/5)
+head(bmi.dat.df2)
+
+# Change data to match table format from Quintana-Pacheco
+
+bmi.dat.df.wide2 = dcast(bmi.dat.df2, cov.fe + sub + adj ~ quart, value.var="coef")
+bmi.dat.df.wide2
+
+```
+
+
+
+## Summary tables
+
+### Race/ethnicity
+
+```{r}
+# print off table
+
+race.df.wide[race.df.wide=="NA"] <- "" # get rid of na
+race.df.wide[is.na(race.df.wide)] <- "" # get rid of nadim(race.df.wide)
+
+names.race= names(race.df.wide) 
+race.df.wide2 = race.df.wide[c(names.race[1:3], "ref", "Q2", "Q3", "Q4", "linear")]
+
+k2.race = kable(race.df.wide2,
+     align='lllllllc',
+      caption = "Breast cancer hazard ratios by serum iron covariate and race/ethnic subgroups.",
+      booktabs=T,
+      col.names = c( "Iron",
+                     "Race/ethnicity",
+                     "Values", 
+                     "ref", "Q2", "Q3", "Q4", ""),
+      #align=rep("l", 8),
+      escape=F) %>%
+  column_spec(c(2), width = "3cm") %>% # NOTE: this has to come first to change row width?
+  column_spec(c(8), width = "4cm") %>% # NOTE: this has to come first to change row width?
+  collapse_rows(columns = 1:2, valign = "middle") %>% # note: valign no longer works
+  add_header_above(c("", "", "", "Quartile of iron-related biomarker" = 4, "Linear trend over quartiles$^c$" = 1), escape=F) %>%
+  kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size=10) %>%
+  footnote(alphabet=c("Adjusted for BMI, baseline menopause status, and a product term of these two variables. Number of adjusted factors is small due to small sample size for some groups.",
+                      "log transformed",
+                      "Iron covariate in quartile units"),
+           threeparttable=T) # source: https://rdrr.io/cran/kableExtra/man/footnote.html)
+
+save(k2.race, file="../sections/k2-race.RData")
+
+```
+
+
+
+```{r, results='markup', eval=T}
+k2.race
+```
+
+### BMI
+
+```{r, results='markup'}
+# print off table
+
+bmi.dat.df.wide[bmi.dat.df.wide=="NA"] <- "" # get rid of na
+bmi.dat.df.wide[is.na(bmi.dat.df.wide)] <- "" # get rid of na
+dim(bmi.dat.df.wide)
+
+names.bmi = names(bmi.dat.df.wide) 
+bmi.dat.df.wide.tab = bmi.dat.df.wide[c(names.bmi[1:3], "ref", "Q2", "Q3", "Q4", "linear")]
+
+k2.bmi = kable(bmi.dat.df.wide.tab,
+               align='lllllllc',
+      caption = "Breast cancer hazard ratios by serum iron covariate and BMI subgroups",
+      booktabs=T,
+      col.names = c( "Iron",
+                     "BMI groups",
+                     "Values", 
+                     "ref", "Q2", "Q3", "Q4", ""),
+      escape=F) %>%
+  column_spec(c(2), width = "3cm") %>% # NOTE: this has to come first to change row width?
+  column_spec(c(8), width = "4cm") %>% # NOTE: this has to come first to change row width?
+  collapse_rows(columns = 1:2, valign = "middle") %>% # note: valign no longer works
+  add_header_above(c("", "", "", "Quartile of iron-related biomarker" = 4, "Linear trend over quartiles$^c$" = 1), escape=F) %>%
+  kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size=10)  %>%
+    footnote(alphabet = c("Adjusted for baseline smoking, alcohol, education, HRT, age at menarche, age at first birth, oral contraceptive use, and menopause status.",
+                          "log transformed",
+                          "Iron covariate in quartile units"), 
+             threeparttable=T)  # source: https://rdrr.io/cran/kableExtra/man/footnote.html
+
+
+save(k2.bmi, file="../sections/k2-bmi.RData")
+```
+
+```{r, results='markup'}
+k2.bmi
+```
+
+#### Look at ferritin for one subgroup (obese) from the BMI analyses
+
+```{r, results='hide'}
+
+# 3/31/2020 Additional analysis estimating breast cancer HR for lowest quartile vs 2nd - 4th quartile
+# adapted from get.coef function
+var.fe = "fertn"
+df.pc$var.fe = df.pc[var.fe]
+summary(df.pc$var.fe); summary(df.pc$fertn)
+
+df.e = df.pc[!(is.na(df.pc$fertn)),] # need to remove missing for cch to work
+summary(df.e$fertn)
+
+df.e2 = df.e[!(is.na(df.e$bmi2)) & df.e$bmi2=="4) 30+",]
+
+table(df.e2$UMN_Iron_Subcohort)
+table(df.e2$subcohort)
+table(df.e2$event)
+with(df.e2, table(subcohort, event))
+
+# get quartiles
+qrts = quantile(df.e2$fertn, c(0, 0.25, 0.5, 0.75, 1), na.rm=T)
+qrts2 = quantile(df.e2$fertn, c(0, 0.25, 1), na.rm=T)
+#qrts = quantile(df1$iron.cov, c(0, 0.1, 0.5, 0.9, 1), na.rm=T)
+qrts; qrts2
+
+# Make a variable with cut points based on quartiles above
+df.e2$fe.cutq = cut(df.e2$fertn, qrts, include.lowest = T, dig.lab=10)
+summary(df.e2$fe.cutq)
+df.e2$fe.cutq2 = cut(df.e2$fertn, qrts2, include.lowest = T, dig.lab=10)
+summary(df.e2$fe.cutq2)
+
+# What is the median within those intervals? =====================
+dt = data.table(df.e2)
+setkey(dt, fe.cutq)
+medians = dt[,list(median=median(fertn, na.rm=T)), by=fe.cutq]
+medians = data.frame(medians[complete.cases(medians)])
+medians
+
+# get median of untransformed serum iron marker
+medians.orig = if(var.fe %in% c("fertn.log")) dt[,list(median=median(exp(fertn.log), na.rm=T)), by=fe.cutq] else dt[,list(median=median(fertn, na.rm=T)), by=fe.cutq]
+medians.orig = data.frame(medians.orig[complete.cases(medians.orig)])
+medians.orig
+
+# 1) Cox ph with quartiles ==================================
+
+sapply(df.e2[c("start.age", "c.age")], summary)
+
+n.size=50884
+
+# original analysis
+cox.qrt = cch(Surv(start.age, c.age, event) ~ fe.cutq , # + cluster(HH_PSID) # NOTE: clustering does not work
+             data=df.e2,
+             subcoh = ~subcohort,
+             id = ~ PSID,
+             cohort.size=n.size)
+
+cox.qrt
+exp(coef(cox.qrt))
+```
+
+```{r, results='markup'}
+summary(df.e2$fe.cutq2)
+df.e2$fe.cutq2 = relevel(df.e2$fe.cutq2, ref="(40,1404]")
+
+# additional analysis comparing lowest quartile to rest of group
+cox.qrt2 = cch(Surv(start.age, c.age, event) ~ fe.cutq2 , # + cluster(HH_PSID) # NOTE: clustering does not work
+             data=df.e2,
+             subcoh = ~subcohort,
+             id = ~ PSID,
+             cohort.size=n.size)
+
+cox.qrt2
+exp(coef(cox.qrt2))
+
+get.ci(coef(summary(cox.qrt2)))
+
+```
+
+#### Look at iron for one subgroup (obese) from the BMI analyses
+
+```{r, results='hide'}
+
+# 3/31/2020 Additional analysis estimating breast cancer HR for lowest quartile vs 2nd - 4th quartile
+# adapted from get.coef function
+var.fe = "fe"; var.fe
+df.pc$var.fe = df.pc[,var.fe]
+class(df.pc$var.fe)
+summary(df.pc$var.fe); summary(df.pc$fe)
+
+df.e = df.pc[!(is.na(df.pc$var.fe)),] # need to remove missing for cch to work
+summary(df.e$var.fe)
+
+df.e2 = df.e[!(is.na(df.e$bmi2)) & df.e$bmi2=="4) 30+",]
+
+# get quartiles
+qrts = quantile(df.e2$var.fe, c(0, 0.25, 0.5, 0.75, 1), na.rm=T)
+qrts2 = quantile(df.e2$var.fe, c(0, 0.25, 1), na.rm=T)
+#qrts = quantile(df1$iron.cov, c(0, 0.1, 0.5, 0.9, 1), na.rm=T)
+qrts; qrts2
+
+# Make a variable with cut points based on quartiles above
+df.e2$fe.cutq = cut(df.e2$var.fe, qrts, include.lowest = T, dig.lab=10)
+summary(df.e2$fe.cutq)
+df.e2$fe.cutq2 = cut(df.e2$var.fe, qrts2, include.lowest = T, dig.lab=10)
+summary(df.e2$fe.cutq2)
+
+# What is the median within those intervals? =====================
+dt = data.table(df.e2)
+setkey(dt, fe.cutq)
+medians = dt[,list(median=median(fertn, na.rm=T)), by=fe.cutq]
+medians = data.frame(medians[complete.cases(medians)])
+medians
+
+# get median of untransformed serum iron marker
+medians.orig = if(var.fe %in% c("fertn.log")) dt[,list(median=median(exp(fertn.log), na.rm=T)), by=fe.cutq] else dt[,list(median=median(fertn, na.rm=T)), by=fe.cutq]
+medians.orig = data.frame(medians.orig[complete.cases(medians.orig)])
+medians.orig
+
+```
+
+```{r, results='markup'}
+summary(df.e2$fe.cutq2)
+df.e2$fe.cutq2 = relevel(df.e2$fe.cutq2, ref="(69,276]")
+
+# additional analysis comparing lowest quartile to rest of group
+cox.qrt2 = cch(Surv(start.age, c.age, event) ~ fe.cutq2  , # + cluster(HH_PSID) # NOTE: clustering does not work
+             data=df.e2,
+             subcoh = ~subcohort,
+             id = ~ PSID,
+             cohort.size=n.size)
+
+cox.qrt2
+exp(coef(cox.qrt2))
+
+get.ci(coef(summary(cox.qrt2)))
+
+```
+
+
+### BMI, only adjusted for menopause
+
+```{r, results='markup'}
+
+# print off table
+
+bmi.dat.df.wide2[bmi.dat.df.wide2=="NA"] <- "" # get rid of na
+bmi.dat.df.wide2[is.na(bmi.dat.df.wide2)] <- "" # get rid of nadim(bmi.dat.df.wide)
+
+names.bmi2 = names(bmi.dat.df.wide2) 
+bmi.dat.df.wide.tab2 = bmi.dat.df.wide2[c(names.bmi2[1:3], "ref", "Q2", "Q3", "Q4", "linear")]
+
+k2.bmi2 = kable(bmi.dat.df.wide.tab2,
+      caption = "Breast cancer hazard ratios by serum iron covariate and BMI subgroups",
+      booktabs=T,
+      col.names = c( "Iron",
+                     "BMI groups",
+                     "Values", 
+                     "ref", "Q2", "Q3", "Q4", "Continuous$^b$"),
+      escape=F) %>%
+  collapse_rows(columns = 1:2, valign = "top") %>%
+  kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size=10)  %>%
+    footnote(alphabet = c("Adjusted for baseline menopause status.",
+                          "Iron covariate in quartile units"), 
+             threeparttable=T) # source: https://rdrr.io/cran/kableExtra/man/footnote.html
+
+save(k2.bmi2, file="../sections/k2-bmi-single.RData")
+```
+
+```{r, results='markup'}
+k2.bmi2
+```
+
+
+## Unadjusted models for quartiles
+
+### BMI
+
+```{r, results='asis', eval=T}
+
+for(i in bmi.models) print(i) 
+
+```
+
+### Race/ethnicity
+
+```{r, results='asis', eval=T}
+
+for(i in race.models) print(i)
+
+```
+
+## Unadjusted models for continuous variable
+
+### BMI
+
+```{r, results='asis', eval=T}
+
+for(i in bmi.models.lin) print(i) 
+
+```
+
+### Race/ethnicity
+
+```{r, results='asis', eval=T}
+
+for(i in race.models.lin) print(i)
+
+```

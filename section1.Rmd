@@ -1,0 +1,803 @@
+---
+title: "Section 1: Descriptive statistics"
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    theme: united
+    toc: no
+editor_options:
+  chunk_output_type: console
+header-includes:
+ \usepackage{float}
+---
+
+# Table 1. Summary statistics
+
+```{r setup1, include=FALSE}
+knitr::opts_chunk$set(echo = T, 
+                      results = 'markup',
+                      warning = F,
+                      fig.pos = 'H')
+
+#runif(1, 0, 10^8)
+set.seed(74268794)
+
+```
+
+
+```{r, include=F}
+# bring in packages
+require(knitr)
+require(haven)
+require(data.table)
+require(tableone)
+require(ggplot2)
+require(kableExtra)
+require(rowr)
+require(stargazer)
+library("PerformanceAnalytics")
+require(ggpubr)
+require(labelled)
+require(survival)
+```
+
+
+```{r, eval=F}
+
+# read original SAS data into R: only repeat if new data
+
+df1. =  read_sas(data_file="../../Sister Study/data/dr00224_00_02/dr00224_00_02.sas7bdat",
+                 catalog_file = "../../Sister Study/formats-subset/sisformats.sas7bcat" ) 
+
+dim(df1.) # 50884 by 1050
+attributes(df1.$AgeExact_Baseline)
+print_labels(df1.$AL_Status)
+
+load(file="ids-include.RData") # has psid.include from data-handling-cch.Rmd
+
+# Problem with haven and subsetting: https://github.com/tidyverse/haven/issues/392
+df1 = df1.[which(df1.$PSID %in% psid.include),] # subset to those people selected in data-handling-cch.Rmd
+df1 = df1.
+dim(df1) # 
+attributes(df1$AgeExact_Baseline) # loses labels
+
+# Get labels back
+df1 <- df1 %>% copy_labels_from(df1.) # Source: http://larmarange.github.io/labelled/reference/copy_labels.html
+dim(df1)
+attributes(df1$AgeExact_Baseline) # gets labels back
+save(df1, file="../sections/updated-data.RData")
+
+```
+
+
+## Summary of covariates by sample type (total or iron subset)
+
+
+```{r, eval=F, include=F}
+# check iron study data by toenail data
+
+load(file="../sections/updated-data.RData") # load original data, df1
+dim(df1)
+
+with(df1, table(SCL_Toenails_Collected, DR224_FU_BC_Event_Serum, UMN_Iron))
+with(df1, table(Metals_Toenails_Matched, DR224_FU_BC_Event_Serum, UMN_Iron))
+with(df1, table(Metals_Toenails_Matched2, DR224_FU_BC_Event_Serum, UMN_Iron))
+
+summary(df1$UMN_Iron_SCL_FE)
+df1$scl.2 = ifelse(is.na(df1$UMN_Iron_SCL_FE), 0, 1)
+df1$subcohort = ifelse(is.na(df1$UMN_Iron_Subcohort),0,1)
+with(df1, table(SCL_Toenails_Collected, UMN_Iron_Subcohort, UMN_Iron))
+with(df1, table(scl.2, subcohort, UMN_Iron))
+with(df1, table(scl.2, subcohort, SCL_Toenails_Collected))
+
+
+```
+
+```{r}
+
+load(file="../sections/updated-data.RData") # load original data, df1
+dim(df1) # 
+
+attributes(df1$AgeExact_Baseline)
+
+#grep("Smoke", names(df1),  value=T) # variables with word smoke in it
+#grep("BCAny", names(df1),  value=T) # variables with word smoke in it
+
+table(df1$FU_BC_DxType)
+table(df1$PG_TermNum)
+table(as_factor(df1$SE_RACE15))
+table(as_factor(df1$SE_RACE_ETH))
+
+with(df1[df1$UMN_Iron==1,], table("UMN_Iron_Subcohort",
+                'FU_BCInvD_Event'))
+table(df1$UMN_Iron_Subcohort) # subcohort=3200
+
+```
+
+
+```{r}
+
+iron.supp.vars = c(
+  'PA_RX_Iron_24Hr',
+              'RPA_RX_Iron_24Hr',
+              'SCL_PA_RX_Iron_24Hr',
+              'SCL_RPA_RX_Iron_24Hr',
+              'dh_vm_yn_itm16',
+              'TQ75',
+              'TQ75a',
+              'TQ75b',
+              'TQ75c',
+              'LL94',
+              'LL94a',
+              'LL94b',
+              'LL94c')
+
+ida.vars = c('MC116',
+              'MC117')
+
+lmp.vars = c('FU_BCInv_LMP',
+             'FU_BCInv_LMPExact',
+             'FU_BCInv_LMPStatus')
+
+blood.vars = c('MC234',
+              'MC236',
+              'MC235no',
+              'MC235un')
+
+df2 = df1[, c('PSID', 'FU_BCInvD_Event',
+              'HR_Menopause', 
+              'HR_MenopauseAge',
+              'AgeExact_Baseline',
+              'HZ_SM_SmokeStatusN',
+              'FU_BC_AL_Status',
+              'SE18',
+              'EX_BMI_final',
+              'EX_BMI_CDC_final',
+              'Ex_Waist',
+              'Ex_Height_final',
+              'HZ_HR_HRT_Ever',
+              'PG_TermNum',
+              'HR_HR1Ever',
+              'AgeExact_Baseline',
+              'FU_BCInvD_EOFAgeExact',
+              'FU_BCInvD_EOFAge',
+              'FU_BCInvD_MenopauseAge',
+              'Study',
+              'UMN_Iron',
+              'UMN_Iron_Baseline_FE',
+              'UMN_Iron_Baseline_FERTN', 
+              'UMN_Iron_Baseline_FESAT', 
+              'UMN_Iron_Baseline_TIBC', 
+              'UMN_Iron_Baseline_UIBC',
+              'MC234',  # MC234 (Main) MC218 (Vanguard). R has ever given blood
+              'MC236', # MC236 (Main) MC220 (Vanguard). Given blood in past 12 mos
+              'MC235no', # MC235 (Main) MC219 (Vanguard). # of times/gallons blood donated
+              'MC235un', # MC235 (Main) MC219 (Vanguard). unit (times/gallons) blood donated
+              'HH_PSID',
+              "PG_MedParity",'PG_MenarcheAge',
+              'PG_AgeFirstLiveBirth', iron.supp.vars, blood.vars, lmp.vars, ida.vars,
+              'FU_BCInvD_DxType', 'MC114', "MC115",
+              'FU_BC_DxPR_Result', 'FU_BC_DxER_Result', 'FU_BCInvD_DxHER2_Result',
+              'UMN_Iron_Subcohort',
+              'UMN_Iron_Validation',
+              'SE_RACE15', 'SE_RACE_ETH',
+              "UMN_Iron_SCL_BCInvD_Event",
+              "FU_BCInvD_DxAgeExactMax", "FU_BCInvD_DxAgeExactMin",
+              'FU_BCInvD_DxStage_Simplified')]
+
+dim(df2) # 50,884
+
+names.vars = c('PSID', "event", 
+               "menop.status", 
+               "menop.age",
+               'baseline.age',
+               'smoke',
+               'alc',
+               'educ',
+               'bmi',
+               'EX_BMI_CDC_final',
+               'waist',
+               'height',
+               'ever.hrt',
+               'term.births',
+               'birth.control',
+               'AgeExact_Baseline',
+              'FU_BCInvD_EOFAgeExact',
+              'FU_BCInvD_EOFAge',
+              'fu.meno.age',
+              'study', 
+              'iron.study',
+              'fe', 'fertn', 'fesat', 'tibc', 'uibc',
+              'ever.donate.b',
+              'donate.b.12',
+              'no.times.donate.b',
+              'unit.donate.b', 'HH_PSID',
+               "parity", 'age.menarche',
+               "age.firstbirth",
+              iron.supp.vars, blood.vars, lmp.vars, ida.vars,
+              "FU_BCInvD_DxType", 'MC114', "MC115",
+              'FU_BC_DxPR_Result', 'FU_BC_DxER_Result', 'FU_BCInvD_DxHER2_Result',
+              'UMN_Iron_Subcohort',
+              'UMN_Iron_Validation',
+              'SE_RACE15', 'SE_RACE_ETH',
+              "UMN_Iron_SCL_BCInvD_Event",
+              "FU_BCInvD_DxAgeExactMax", "FU_BCInvD_DxAgeExactMin",
+              'stage')
+
+colnames(df2) = names.vars
+summary(df2)
+
+```
+
+
+
+```{r}
+
+# NOTE: KOB suggested we use min/max follow-up age to find a follow-up age instead of removing from sample.
+# after 3/2020 draft review
+
+df2$median = apply(df2[c("FU_BCInvD_DxAgeExactMax", "FU_BCInvD_DxAgeExactMin")], 1, median)
+head(df2[is.na(df2$FU_BCInvD_EOFAgeExact), c("event", 
+                                     "FU_BCInvD_DxAgeExactMax", "FU_BCInvD_DxAgeExactMin",
+                                     "FU_BCInvD_EOFAgeExact", "FU_BCInvD_EOFAge", 
+                                      "median")])
+
+```
+
+```{r}
+# some more data handling
+
+df2 = within(df2, {
+  # Make age at first birth categorical variable
+  age.firstbirth.rev = ifelse(is.na(age.firstbirth)==T, -1, age.firstbirth) # make nulliparous its own category
+  age.firstbirth.cat = cut(age.firstbirth.rev, c(-1, 0, 20, 24, 29, 55), include.lowest = T)
+  age.firstbirth.cat = relevel(age.firstbirth.cat, ref="(20,24]")
+  age.firstbirth.cat.table = factor(age.firstbirth.cat,
+                                    levels = c("[-1,0]",
+                                               "(0,20]",
+                                               "(20,24]",
+                                               "(24,29]",
+                                               "(29,55]"))
+
+})
+  
+table(df2$age.firstbirth.cat.table)
+
+sapply(df2[,c('fe', 'fertn', 'fesat', 'tibc', 'uibc')],
+       summary)
+
+```
+
+```{r}
+# misc
+table(as_factor(df2$birth.control))
+table(as_factor(df2$stage))
+```
+
+
+```{r}
+
+# check transferrin calc
+df2$calc.fesat = with(df2, round((fe/(fe+uibc))*100, 0))
+head(df2[c("fesat", "calc.fesat")])
+
+df2$fesat.diff = with(df2, fesat-calc.fesat)
+head(df2[which(df2$fesat.diff==1), c("fesat", "calc.fesat", "fesat.diff")]) # there might be some with different rounding practices or my measures are not as precise as theirs for calcs.
+table(df2$fesat.diff) # only 7  
+
+with(df2, summary(fesat-calc.fesat))
+with(df2, summary(fesat - ((fe/tibc)*100)))
+
+```
+
+
+```{r}
+
+# menopause ==================
+attributes(df2$menop.status) # look up format in ../data/sas-contents.pdf file
+df2$menop.status.f = zap_missing(df2$menop.status)
+df2$menop.status.f = as_factor(df2$menop.status.f)
+table(df2$menop.status.f)
+
+# smoking ===============================
+attributes(df2$smoke) # HZSMSTAT.
+df2$smoke.f = zap_missing(df2$smoke)
+df2$smoke.f = as_factor(df2$smoke.f)
+table(df2$smoke.f)
+
+# combine 2 unk groups into 1
+df2$smoke.f2 = factor(df2$smoke,
+                     labels = c("Never",
+                                "Former",
+                                "Former",
+                                "Current"))
+table(df2$smoke.f2)
+
+# Alcohol ===========================
+attributes(df2$alc) # alcstatus.
+df2$alc.f = zap_missing(df2$alc)
+df2$alc.f = as_factor(df2$alc.f)
+table(df2$alc.f)
+
+
+# collapse
+df2$alc.f2 = factor(df2$alc,
+                   labels = c('Never drank',
+'Social',
+'Social',
+'Social',
+'Regular',
+'Regular',
+'Regular',
+'Unknown',
+'Unknown',
+'Unknown'))
+
+table(df2$alc.f2)
+# to do: need to follow up on best way to categorize drinking status.
+
+
+# collapse
+df2$alc.f3 = factor(df2$alc,
+                   labels = c('Never drank',
+'Past',
+'Current',
+'Unk',
+'Past',
+'Current',
+'Unk',
+'Unk',
+'Unk',
+'Unk'))
+
+table(df2$alc.f3)
+df2$alc.f4 = ifelse(df2$alc.f3=="Unk", NA, as_factor(df2$alc.f3))
+df2$alc.f4 = factor(df2$alc.f4, labels = c("Never", "Past", "Current"))
+table(df2$alc.f4)
+
+# Education ===========================
+attributes(df2$educ) # SEEDUC.
+df2$educ.f = zap_missing(df2$educ)
+df2$educ.f = as_factor(df2$educ.f)
+table(df2$educ.f)
+
+# combine doctoral and masters and lowest 3 levels
+df2$educ.f2 = factor(df2$educ.f,
+                   labels = c(
+                      "1-3 < high school degree",
+                      "1-3 < high school degree",
+                      "1-3 < high school degree",
+                      "4-5) Completed high school or GED",
+                      "4-5) Completed high school or GED",
+                      "6) Some college but no degree",
+                      "7) Associate or technical degree",
+                      "8) Bachelor's degree",
+                      "9 \\& 10) Doctoral or Master's degree",
+                      "9 \\& 10) Doctoral or Master's degree"
+                   ))
+table(df2$educ.f2)
+
+# HRT ====================================
+attributes(df2$ever.hrt) # HRYESNO.
+table(df2$ever.hrt)
+df2$ever.hrt.f = factor(df2$ever.hrt, labels = c("No", "Yes"))
+table(df2$ever.hrt.f)
+
+# term.births ============================================
+attributes(df2$term.births) # PGMISS.
+df2$term.births = as.numeric(zap_missing(df2$term.births))
+table(df2$term.births)
+class(df2$term.births) # numeric
+
+# at least one term birth ================================
+df2$one.term.birth = with(df2, ifelse(term.births>0, 1, 0))
+table(df2$one.term.birth)
+df2$one.term.birth.f = factor(df2$one.term.birth,
+                              labels = c("No", "Yes"))
+
+# birth control =========================================
+attributes(df2$birth.control) # HRGRID.
+table(df2$birth.control)
+df2$birth.control.f = factor(df2$birth.control, 
+                             labels = c("No", "Yes"))
+table(df2$birth.control.f)
+
+# ever donate blood =======================
+attributes(df2$ever.donate.b)
+levels(factor(df2$ever.donate.b))
+df2$ever.donate.b.f = factor(df2$ever.donate.b, labels=c("No", "Yes"))
+  
+levels(factor(df2$study))
+table(as_factor(df2$study))
+
+df2$study.f2 = factor(df2$study, labels = c("Vanguard", "Main"))
+# 1=Vanguard, 2=Main, 3=Two Sisters
+
+df2$UMN_Iron_Baseline_FE = df2$fe
+df2$UMN_Iron_Baseline_FERTN = df2$fertn
+df2$UMN_Iron_Baseline_FESAT = df2$fesat
+df2$UMN_Iron_Baseline_TIBC = df2$tibc
+df2$UMN_Iron_Baseline_UIBC = df2$uibc
+
+# race/ethnicity =========================================
+attributes(df2$SE_RACE_ETH)
+df2$race.eth = zap_missing(df2$SE_RACE_ETH)
+df2$race.eth = as_factor(df2$race.eth)
+table(df2$race.eth)
+df2$race.eth = factor(df2$race.eth, 
+                      labels = c("Non-Hispanic White",
+                                 "Non-Hispanic Black",
+                                 "Hispanic",
+                                 "Other"))
+# BMI categories ==================================
+attributes(df2$EX_BMI_CDC_final)
+df2$bmi.cat = as_factor(zap_missing(df2$EX_BMI_CDC_final))
+table(df2$bmi.cat)
+
+
+df2 = within(df2, {
+  c.age = ifelse(is.na(FU_BCInvD_EOFAgeExact),
+                    FU_BCInvD_EOFAge + round(runif(nrow(df2),0,1), 1), 
+                    FU_BCInvD_EOFAgeExact)
+  start.age = AgeExact_Baseline
+  futime = c.age - start.age
+  
+  # time since menopause (years)
+  time.since.menop = ifelse(is.na(menop.age), 0, start.age - menop.age)
+  
+  # time menstruating (years)
+  yrs.mens = ifelse(is.na(menop.age),
+                    start.age - age.menarche - parity,
+                    menop.age - age.menarche - parity
+                    ) # Note: this variable original in table12.Rmd from age of onset project.
+  
+  # binary early menopause variable
+  early.menop.45 = ifelse(is.na(menop.age), 0,
+                          ifelse(menop.age<45, 1, 
+                                 ifelse(menop.age<80, 2, NA))) # we will be missing the people who have early menopause after enrollment
+  
+  early45 = ifelse(is.na(menop.age), 0, 
+                   ifelse(menop.age<45, 1, 0)) 
+  menop = ifelse(is.na(menop.age), 0, 1)
+})
+
+
+with(df2, table(early45, menop, early.menop.45, exclude=NULL))
+table(df2$early.menop.45)
+
+df2$futime = with(df2, ifelse(is.na(futime), c.age-baseline.age, futime))
+summary(df2$futime)
+dim(df2)
+
+prop.table(table(df2$early.menop.45))
+#with(df2, table(early.menop.45, menop.age)) # double check variable.
+
+```
+
+
+
+```{r}
+
+load(file="../sections/ids-include.RData")
+length(psid.include)
+
+df3 = df2[which(df2$PSID %in% psid.include & df2$iron.study==1),]
+dim(df3)
+summary(df3$c.age)
+
+# Change c.age (end of follow-up to include 9 people who are missing follow-up age) -- see data-handling-cch.Rmd
+
+df3$c.age = with(df3, ifelse(is.na(c.age), 
+                             median,
+                             c.age))
+summary(df3$c.age)
+
+head(df3[, c("event", 
+             "FU_BCInvD_DxAgeExactMax", "FU_BCInvD_DxAgeExactMin",
+             "FU_BCInvD_EOFAgeExact", "FU_BCInvD_EOFAge", 
+             "c.age")])
+
+
+df3$UMN_Iron_Subcohort[is.na(df3$UMN_Iron_Subcohort)] = 0 # convert missing to 0s
+df3$subcohort = df3$UMN_Iron_Subcohort
+table(df3$subcohort)
+names(df3)
+
+df3$subcohort.nocases = with(df3, ifelse((subcohort==1 & event==0), 1, 0))
+with(df3, table(subcohort.nocases, event))
+
+save(df3, file="../sections/updated-data-iron.RData")
+
+```
+
+```{r}
+
+iron.vars = c('fe', 'fertn', 'fesat', 'tibc', 'uibc')
+
+cont.vars = c("baseline.age", 
+              "bmi", "waist", "height",
+              'age.menarche')
+
+cont.vars2 = c("baseline.age", 
+              "bmi", "waist", "height",
+              'age.menarche',
+              'time.since.menop',
+              iron.vars)
+
+cat.vars = c(
+             'early.menop.45',
+             'smoke.f2',
+             'alc.f4',
+             'educ.f2', # no doctoral degrees in iron subset (only 4 percent in total sample)
+             'ever.hrt.f',
+             'birth.control.f',
+             #'ever.donate.b.f',
+             'age.firstbirth.cat.table',
+             'race.eth',
+             'bmi.cat')
+
+```
+
+
+```{r}
+# iron.vars
+# make dummies for iron vars
+dim(df2)
+df2$UMN_Iron_FE = 0
+df2$UMN_Iron_FERTN = 0
+df2$UMN_Iron_UIBC = 0
+df2$UMN_Iron_TIBC = 0
+df2$UMN_Iron_FESAT = 0
+
+df2$fe = 0
+df2$fertn = 0
+df2$fesat = 0
+df2$tibc = 0
+df2$uibc = 0
+
+t1 = CreateTableOne(vars = c(cont.vars2, cat.vars), 
+                        data=df2,
+                        factorVars = c(cat.vars),
+                        test=FALSE)
+
+t1.mat <- print(t1, nonnormal = cont.vars2,
+                quote = FALSE, noSpaces = TRUE, printToggle = FALSE,
+                catDigits=0, contDigits=0)
+
+t1.mat
+nrow(t1.mat)
+
+
+```
+
+```{r, echo=F, include=F}
+# analysis following reviewer comment
+
+dim(df3)
+confounder.list.baseline = c('alc.f4',  'educ.f2', 'bmi', 'birth.control.f', "ever.hrt.f", 'smoke.f2',
+                     'age.menarche', 'age.firstbirth.cat', "menop.status.f",
+                     "bmi:menop.status.f")
+
+list.cc = c('alc.f4',  'educ.f2', 'bmi', 'birth.control.f', "ever.hrt.f", 'smoke.f2',
+                     'age.menarche', 'age.firstbirth.cat', "menop.status.f")
+
+cc = df3[complete.cases(df3[list.cc]),] # take only complete cases
+(dim(df3)-dim(cc))/dim(df3)
+summary(cc$start.age)
+summary(cc$c.age)
+
+sapply(cc[list.cc], summary)
+
+table(cc$alc.f4)
+cc$alc.f4 = relevel(cc$alc.f4, ref="Current") # Current drinker is most prevalent
+
+check.conf = cch(Surv(start.age, c.age, event) ~ alc.f4 + educ.f2 +  birth.control.f +
+                   ever.hrt.f + smoke.f2 + age.menarche + age.firstbirth.cat + bmi + menop.status.f + bmi:menop.status.f,
+                  data=cc, # take only complete cases
+                  subcoh = ~subcohort,
+                  id = ~PSID,
+                  cohort.size = 50884)
+
+kable(summary(check.conf)$coefficients)
+
+save(check.conf, file="check-assoc.RData")
+
+```
+
+
+```{r}
+
+# get summary for subset of sample
+
+sub = df3
+table(sub$subcohort)
+
+# subcohort==1
+# ===============================================
+t1.iron.sub1 = CreateTableOne(vars = c(cont.vars2, cat.vars), 
+                        data=sub[which(sub$subcohort.nocases==1),],
+                        factorVars = c(cat.vars),
+                        test=FALSE)
+
+t1.mat.iron.sub1 <- print(t1.iron.sub1, 
+                     nonnormal = cont.vars2,
+                     quote = FALSE, noSpaces = TRUE, printToggle = FALSE,
+                     catDigits=0, contDigits=0)
+
+t1.mat.iron.sub1
+
+# subcohort==0
+# ===============================================
+
+t1.iron.sub0 = CreateTableOne(vars = c(cont.vars2, cat.vars), 
+                        data=sub[which(sub$subcohort.nocases==0),],
+                        factorVars = c(cat.vars),
+                        test=FALSE)
+
+t1.mat.iron.sub0 <- print(t1.iron.sub0,
+                     nonnormal = cont.vars2,
+                     quote = FALSE, noSpaces = TRUE, printToggle = FALSE,
+                     catDigits=0, contDigits=0)
+
+t1.mat.iron.sub0
+
+```
+
+
+```{r, include=F, eval=F}
+
+# table of iron values for menopause status
+names(sub)
+menop.table = CreateTableOne(vars = c(iron.vars),
+                             data=sub,
+                             strata = "menop.status.f",
+                             test=FALSE)
+
+print(menop.table,
+      nonnormal=iron.vars)
+
+```
+
+
+```{r}
+# combine total and subset
+
+tot = cbind(t1.mat, t1.mat.iron.sub0, t1.mat.iron.sub1)
+tot
+
+tot[tot== "0 [0, 0]"] <- " "
+class(tot)
+variable = rownames(tot)
+
+tot = cbind(variable, as.data.frame(tot))
+tot
+
+
+colnames(tot) = c("Iron", "Total", "Cases", "Subcohort")
+head(tot, 15)
+
+
+rownames(tot) = NULL
+tot
+dim(tot)
+```
+
+```{r}
+
+tot$new.names = c("n",
+                  "Baseline age (years)", 
+                  "BMI (kg/m$^2$)",
+                  "Waist circumference (in)",
+                  "Height (cm)",
+                  "Age at menarche (years)",
+                  "Time since menopause (years)",
+                  "Iron (mcg/dL)",
+                  "Ferritin (mcg/dL)",
+                  "Iron saturation (\\%)",
+                  "TIBC",
+                  "UIBC",
+                  "Baseline menopause status",
+                  "No menopause",
+                  "age<=45 years",
+                  "age>45 years",
+                  "Smoking status",
+                  "Never",
+                  "Former", 
+                  "Current",
+                  "Alcohol status",
+                  "Never",
+                  "Past",
+                  "Current",
+                  "Education",
+                  "<HS degree",
+                  "Completed HS",
+                  "Some college, no degree",
+                  "Associate or technical degree",
+                  "Bachelor's degree",
+                  "Graduate level degree",
+                  "Hormone replacement therapy (ever Yes/No)",
+                  "Birth control (ever Yes/No)",
+#                  "Blood donation (ever Yes/No)",
+                  "Age at first birth (years)",
+                  'no birth',
+                  '<20',
+                  ">20-24",
+                  '>24-29',
+                  ">29-55",
+                  "Race/ethnicity",
+                  "Non-Hispanic White",
+                  "Non-Hispanic Black",
+                  "Hispanic",
+                  "Other",
+                  "BMI categories (kg/m$^2$)",
+                  "< 18.5",
+                  "18.5-24.9",
+                  "25.0-29.9",
+                  "30.0-34.9",
+                  "35.0-39.9",
+                  "40.0 +")
+
+tot
+                
+                  
+```
+
+## Table
+
+```{r, results='markup', eval=T}
+names(tot)
+
+k1 = kable(tot[c("new.names", "Total", "Subcohort", "Cases")],
+      col.names = c("Variable", "Total", "Subcohort (no cases)","Cases"),
+      row.names = F,
+      booktabs=T,
+      escape=F,
+      linesep = "", 
+      caption = "Baseline characteristics of subcohort and cases of breast cancer",
+      longtable=T) %>%
+  add_header_above(c(" "=2, "Case-cohort" = 2)) %>%
+  add_indent(c(14:16, 18:20, 22:24, 26:31, 36:40, 41:44 ,46:51)) %>%
+  kable_styling(latex_options = c("HOLD_position"), full_width = F)
+
+k1
+
+save(k1, tot, file="../sections/k1.RData")
+
+```
+
+\clearpage
+\newpage 
+
+# Tertiles of serum iron measures
+
+Compare with other studies, including Moore 2008 and Chua 2016
+
+```{r}
+# get quartiles
+# ============================
+
+# fe
+quantile(sub$fe, c(0, 1/3, 2/3, 1), na.rm=T)
+
+# fertn
+quantile(sub$fertn, c(0, 1/3, 2/3, 1), na.rm=T)
+
+# fertn
+quantile(sub$fesat, c(0, 1/3, 2/3, 1), na.rm=T)
+
+# Get deciles
+# ========================================
+quantile(sub$fe, seq(0,1, by=0.1), na.rm=T)
+quantile(sub$fertn, seq(0,1, by=0.1), na.rm=T)
+quantile(sub$fesat, seq(0,1, by=0.1), na.rm=T)
+
+```
+
+
+## Sample exclusions 
+
+<!-- Source: data-handling.Rmd -->
+
+![Exclusions](../sections/flow-sample-cch.png){ width=75% }
+
