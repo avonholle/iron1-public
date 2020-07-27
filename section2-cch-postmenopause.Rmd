@@ -283,11 +283,6 @@ outcome.vars = c("fe", "fertn.log", "fesat", 'PC1')
 
 ```
 
-```{r}
-# export data for section4-cch-post.Rmd and section5-cch-post.Rmd
-save(df.pc, file="data-post.RData")
-
-```
 
 ```{r}
 
@@ -378,7 +373,7 @@ sapply(df1[c("start.age", "c.age")], summary)
 head(df1[is.na(df1$c.age),])
 df1 = df1[!(is.na(df1$fe.cutq)),]
 
-cox.qrt = cch(Surv(start.age, c.age, event) ~ fe.cutq , # + cluster(HH_PSID) # NOTE: clustering does not work
+cox.qrt = cch(Surv(start.age, c.age, event) ~ fe.cutq , 
              data=df1,
              subcoh = ~subcohort,
              id = ~ PSID,
@@ -589,7 +584,6 @@ get.coefs( var.fe = "fertn.log") # check
 outcome.vars2 = c("fe.scale", "fertn.scale", "fesat.scale", "tibc.scale", "uibc.scale")
 
 names(df)
-# to do: look at non-log transofrmed values -- do we see a j-shaped curve?
 
 outcome.vars3 = c("UMN_Iron_Baseline_FE",
                   "UMN_Iron_Baseline_FERTN",
@@ -610,7 +604,7 @@ model.un.list = lapply(models1, '[[', 6)
 m1 = model.un.list[[1]]
 m1$n
 
-# extract out sevent element from each list, the adjusted model
+# extract out seventh element from each list, the adjusted model
 model.adj.list = lapply(models1, '[[', 7)
 
 m1a = model.adj.list[[1]]
@@ -623,7 +617,7 @@ m1a$n
 ```{r}
 
 # extract out first element from each list, the coefficients to print off to table
-coefs.list = lapply(models1, '[[', 1)  # This returns a list with only the third element, the extracted coef data frame
+coefs.list = lapply(models1, '[[', 1)  # This returns a list with only the first element, the extracted coef data frame
 
 coefs.list[[2]]
 
@@ -647,7 +641,6 @@ cox.dat$adj = factor(cox.dat$adj, levels=c("Median",
 levels(cox.dat$adj)
 
 head(cox.dat)
-# Change data to match table format from Quintana-Pacheco
 
 # take out the  Median(log trans)
 cox.dat = cox.dat[!(cox.dat$adj=='Median(log trans)'),]
@@ -796,19 +789,168 @@ for(i in list.unadj) print(i)
 ```
 
 
-```{r}
-# who is person with very low fe?
-hist(df$UMN_Iron_Baseline_FE)
-summary(df$UMN_Iron_Baseline_FE)
-quantile(df$UMN_Iron_Baseline_FE, c(0, 0.01, 0.5, 0.99, 1), na.rm=T)
 
-quantile(df$UMN_Iron_Baseline_FERTN, c(0, 0.15, 0.5, 0.99, 1), na.rm=T)
+
+
+
+## Histograms of data with cutpoints as vertical lines
+
+Check cut points relative to distribution of entire subcohort.
+
+
+```{r}
+
+# extract out ninth element from each list, the coefficients to print off to table
+df.list = lapply(models1, '[[', 8)  # This returns a list with only the ninth element, the extracted coef data frame
+
+summary(df.list[[2]])
+
+
+df.dat =  df.list %>% bind_rows() # source: https://stackoverflow.com/questions/2641653/pass-a-data-frame-column-name-to-a-function
+warnings()
+
+head(df.dat)
+table(df.dat$cov.fe)
+```
+
+```{r}
+
+table(df.dat$quart1)
+qrt.breaks = with(df.dat, round(c(rbind(unique(quart1),
+                            unique(quart2), 
+                            unique(quart3))),1)); qrt.breaks
+qrt.breaks1 = with(df.dat, round(unique(quart1)))
+
+# Source: https://coolbutuseless.github.io/2019/03/07/custom-axis-breaks-on-facetted-ggplot/
+
+count <- 0
+breaks_fun <- function(x) {
+  count <<- count + 1L
+  switch(
+    count,
+    qrt.breaks[1:3],
+    qrt.breaks[4:6],
+    qrt.breaks[7:9],
+    qrt.breaks[10:12]
+  )
+}
+
+
+hist.postmenop = ggplot(data=df.dat,
+       aes(x=iron.var)) + 
+  facet_wrap(cov.fe~., scale="free")+
+  geom_histogram(fill="grey") +
+  theme_bw() +
+  geom_vline(data= df.dat, aes(xintercept=quart1), color="green") +
+  geom_vline(data= df.dat, aes(xintercept=quart2), color="green") +
+  geom_vline(data= df.dat, aes(xintercept=quart3), color="green") +
+  scale_x_continuous(breaks = breaks_fun) +
+  labs(title="Histograms for postmenopausal sample") #, limits = c(-5, NA)) 
+
+
+count <- 0
+breaks_fun <- function(x) {
+  count <<- count + 1L
+  switch(
+    count,
+    qrt.breaks[1:3],
+    qrt.breaks[4:6],
+    qrt.breaks[7:9],
+    qrt.breaks[10:12]
+  )
+}
+
+# NOTE: have to re-run the breaks function every time you do the plot
+
+ggsave(hist.postmenop + scale_x_continuous(breaks = breaks_fun),
+       file="hist-postmenop.png")
+
+```
+
+![](hist-postmenop.png)
+
+
+
+
+### Look at lower quartile of iron vs rest for the postmenopausal stratified analysis 
+
+```{r, results='hide'}
+
+# 7/9/2020 Additional analysis estimating breast cancer HR for lowest quartile vs 2nd - 4th quartile
+# adapted from get.coef function
+var.fe = "fe"
+df.pc$var.fe = df.pc[,var.fe]
+summary(df.pc$var.fe); summary(df.pc$fe)
+
+df.e = df.pc[!(is.na(df.pc$fe)),] # need to remove missing for cch to work
+summary(df.e$fe)
+
+#df.e2 = df.e[!(is.na(df.e$bmi2)) & df.e$bmi2=="4) 30+",]
+df.e2 = df.e
+
+
+# get quartiles
+qrts = quantile(df.e2$fe, c(0, 0.25, 0.5, 0.75, 1), na.rm=T)
+qrts2 = quantile(df.e2$fe, c(0, 0.25, 1), na.rm=T)
+#qrts = quantile(df1$iron.cov, c(0, 0.1, 0.5, 0.9, 1), na.rm=T)
+qrts; qrts2
+
+# Make a variable with cut points based on quartiles above
+df.e2$fe.cutq = cut(df.e2$fe, qrts, include.lowest = T, dig.lab=10)
+summary(df.e2$fe.cutq)
+df.e2$fe.cutq2 = cut(df.e2$fe, qrts2, include.lowest = T, dig.lab=10)
+summary(df.e2$fe.cutq2)
+
+# What is the median within those intervals? =====================
+dt = data.table(df.e2)
+setkey(dt, fe.cutq)
+medians = dt[,list(median=median(fe, na.rm=T)), by=fe.cutq]
+medians = data.frame(medians[complete.cases(medians)])
+medians
+
+# get median of untransformed serum iron marker
+medians.orig = if(var.fe %in% c("fertn.log")) dt[,list(median=median(exp(fertn.log), na.rm=T)), by=fe.cutq] else dt[,list(median=median(fe, na.rm=T)), by=fe.cutq]
+medians.orig = data.frame(medians.orig[complete.cases(medians.orig)])
+medians.orig
+
+# 1) Cox ph with quartiles ==================================
+
+sapply(df.e2[c("start.age", "c.age")], summary)
+
+n.size=50884
+
+# original analysis
+cox.qrt = cch(Surv(start.age, c.age, event) ~ fe.cutq ,
+             data=df.e2,
+             subcoh = ~subcohort,
+             id = ~ PSID,
+             cohort.size=n.size)
+
+cox.qrt
+exp(coef(cox.qrt))
+```
+
+```{r, results='markup'}
+summary(df.e2$fe.cutq2)
+df.e2$fe.cutq2 = relevel(df.e2$fe.cutq2, ref="(76,340]")
+
+# additional analysis comparing lowest quartile to rest of group
+cox.qrt2 = cch(Surv(start.age, c.age, event) ~ fe.cutq2 , 
+             data=df.e2,
+             subcoh = ~subcohort,
+             id = ~ PSID,
+             cohort.size=n.size)
+
+cox.qrt2
+exp(coef(cox.qrt2))
+
+get.ci(coef(summary(cox.qrt2)))
 
 ```
 
 
 
-## KM plots and tests for PH assumptions
+# KM plots and tests for PH assumptions
 
 <!-- Source:  based on code in section2-cch-premenopause.Rmd -->
 
@@ -835,6 +977,7 @@ df.pc$ceil.exit.age = with(df.pc, ceiling(df.pc$c.age))
 vars.include = c("floor.start.age", "ceil.exit.age",
                 "event", 
                 "subcohort")
+names(df.pc)
 
 ccdat = survSplit(Surv(floor.start.age, ceil.exit.age, event) ~ ., 
                   data=df.pc[complete.cases(df.pc[vars.include]),], 
@@ -877,107 +1020,6 @@ head(ccdat.rev[ccdat$PSID=="00224_100034",c(vars.include, "tstart.rev")])
 # Put cases in subcohort in sample twice. once for time before event and again for time at event: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2216006/
 # how many people with event in subcohort?
 
-
-# compute schoenfeld residuals
-# ==========================================
-
-
-coxfit = coxph(Surv(tstart.rev, tstop, event) ~ fesat.qrt + cluster(id), 
-               data = ccdat.rev, method = "breslow", robust = T, id=id)
-
-coxfit.cont = coxph(Surv(tstart.rev, tstop, event) ~ fesat + cluster(id), 
-               data = ccdat.rev, method = "breslow", robust = T, id=id)
-
-summary(coxfit)
-dim(ccdat.rev)
-length(unique(ccdat.rev$id))
-
-names(coxfit)
-length(coxfit$residuals)
-sresid = resid(coxfit, type = "schoenfeld")
-sresid.cont = resid(coxfit.cont, type = "schoenfeld")
-
-class(sresid) # matrix with three cols
-head(sresid)
-
-# compute KM estimate
-# ==========================================
-
-sfit = survfit(Surv(tstart.rev, tstop, event) ~ 1, 
-               data = ccdat.rev)
-summary(sfit)
-head(sfit$surv)
-names(sfit)
-length(sfit$surv)
-sfit$time
-
-sest = sfit$surv[sfit$n.event>0]
-sest
-
-ecnt = sfit$n.event[sfit$n.event>0]
-ecnt
-
-km.times = sfit$time[sfit$n.event>0]
-km.times
-
-# subcohort of size m and a cohort of size n
-m = dim(df.pc[df.pc$subcohort==1,])[1] # 1960
-n = 50884
-  
-km = rep(sest^(m/n), ecnt)
-
-# Do correlation tests. 
-# ==========================================
-
-# schoenfeld residuals are a much bigger data set and can't figure out how to reduce.
-# correlation test with event time
-length(ccdat$tstop[ccdat$event==1]) # 499
-length(sresid) # 1497
-length(unique(ccdat$tstop))
-length(sresid)
-
-# correlation test with time
-# ===================================================
-
-# for continuous
-cor.test(sort(ccdat$tstop[ccdat$event==1]), sresid.cont, method = "pearson")$p.value 
-
-# for quartiles
-cor.test(sort(ccdat$tstop[ccdat$event==1]), sresid[,1], method = "pearson")$p.value # correlation with 2nd quartile vs 1st
-cor.test(sort(ccdat$tstop[ccdat$event==1]), sresid[,2], method = "pearson")$p.value # correlation with 3rd quartile vs 1st
-cor.test(sort(ccdat$tstop[ccdat$event==1]), sresid[,3], method = "pearson")$p.value # correlation with 4th quartile vs 1st
-
-# correlation test with rank order of event time 
-# =================================================
-
-# for continuous
-cor.test(rank(sort(ccdat$tstop[ccdat$event==1])),
-         sresid.cont,
-         method = "pearson")$p.value 
-
-# for quartiles
-cor.test(rank(sort(ccdat$tstop[ccdat$event==1])),
-         sresid[,1],
-         method = "pearson")$p.value # 2nd q vs 1st
-cor.test(rank(sort(ccdat$tstop[ccdat$event==1])),
-         sresid[,2],
-         method = "pearson")$p.value # 3rd vs 1st
-cor.test(rank(sort(ccdat$tstop[ccdat$event==1])),
-         sresid[,3],
-         method = "pearson")$p.value # 4th q vs 1st
-
-# correlation test with KM estimates
-# for continuous
-cor.test(km, sresid.cont, method = "pearson")$p.value # 1st q vs 1st
-
-# for quartiles
-cor.test(km, sresid[,1], method = "pearson")$p.value # 1st q vs 1st
-cor.test(km, sresid[,2], method = "pearson")$p.value # 2nd q vs 1st. evidence for time dept
-cor.test(km, sresid[,3], method = "pearson")$p.value # 3rd q vs 1st
-
-
-# no evidence of ph violation based on continuous value for fesat
-
 ```
 
 
@@ -1014,12 +1056,12 @@ get.strata = function(strata, ironvar, ironvar2){
     km.times1
     
     # subcohort of size m and a cohort of size n
-    m = dim(df.pc[df.pc$subcohort==1,])[1] # 1005
+    m = dim(df.pc[df.pc$subcohort==1,])[1] 
     n = 50884
       
     km1 = rep(sest1^(m/n), ecnt1) 
     head(km1)
-    length(km1) #499
+    length(km1) 
     
     # plot km data?
     km.times2 = rep(km.times1, ecnt1)
@@ -1114,18 +1156,6 @@ pval = do.call(rbind.data.frame, pval.)
 pval$min.p = do.call(pmin, pval[,c("test.time", "test.time.rank", "test.km")])
 pval
 
-
-# plot of quartiles used in function above
-# ========================================
-# sfit1 = survfit(Surv(tstart.rev, tstop, event) ~ fertn.qrt, 
-#                    data = ccdat.rev)
-# 
-# km.plot = ggsurvplot(sfit1,
-#            xlim=c(40,85))
-# 
-# ch.plot = ggsurvplot(sfit1, fun = "cumhaz",  main = "Cumulative Hazard",
-#            xlim=c(40,85))
-
 # save for reviewer-tables.Rmd
 save(pval, km.plot, file="post-km-fertn.Rmd")
 ```
@@ -1160,18 +1190,6 @@ pval. = sapply(list.fe.km, "[", 2)
 pval = do.call(rbind.data.frame, pval.)
 pval$min.p = do.call(pmin, pval[,c("test.time", "test.time.rank", "test.km")])
 pval
-
-# plot of quartiles used in function above
-# ========================================
-# sfit1 = survfit(Surv(tstart.rev, tstop, event) ~ fe.qrt, 
-#                    data = ccdat.rev)
-# summary(sfit1)
-# 
-# km.plot = ggsurvplot(sfit1, 
-#            xlim=c(40,85)); km.plot
-# 
-# ch.plot = ggsurvplot(sfit1, fun = "cumhaz",  main = "Cumulative Hazard",
-#            xlim=c(40,85)); ch.plot
 
 # save for reviewer-tables.Rmd
 save(pval, km.plot, file="post-km-fe.Rmd")
@@ -1209,17 +1227,6 @@ pval = do.call(rbind.data.frame, pval.)
 pval$min.p = do.call(pmin, pval[,c("test.time", "test.time.rank", "test.km")])
 pval
 
-# plot of quartiles used in function above
-# ========================================
-# sfit1 = survfit(Surv(tstart.rev, tstop, event) ~ fesat.qrt, 
-#                    data = ccdat.rev)
-# summary(sfit1)
-# 
-# km.plot = ggsurvplot(sfit1, 
-#            xlim=c(40,85)); km.plot
-# 
-# ch.plot = ggsurvplot(sfit1, fun = "cumhaz",  main = "Cumulative Hazard",
-#            xlim=c(40,85)); ch.plot
 
 # save for reviewer-tables.Rmd
 save(pval, km.plot, file="post-km-fesat.Rmd")
@@ -1260,184 +1267,5 @@ pval
 
 # save for reviewer-tables.Rmd
 save(pval, km.plot, file="post-km-pc1.Rmd")
-
-```
-
-
-```{r}
-#NOTE: can use this to get pc scores for different data set.
-# source: https://stats.stackexchange.com/questions/261170/can-i-use-the-same-principal-components-of-one-dataset-to-graph-another-dataset
-
-set.seed(42)
-a <- matrix(rnorm(1000), ncol=10)
-b <- matrix(rnorm(1000), ncol=10)
-
-model <- prcomp(a, center=T, scale=T)
-plot(model)
-
-b_pca <- predict(model, b)
-plot(b_pca[,1:2])
-```
-
-
-
-## Histograms of data with cutpoints as vertical lines
-
-Check cut points relative to distribution of entire subcohort.
-
-
-```{r}
-
-# extract out ninth element from each list, the coefficients to print off to table
-df.list = lapply(models1, '[[', 8)  # This returns a list with only the ninth element, the extracted coef data frame
-
-summary(df.list[[2]])
-
-
-df.dat =  df.list %>% bind_rows() # source: https://stackoverflow.com/questions/2641653/pass-a-data-frame-column-name-to-a-function
-warnings()
-
-head(df.dat)
-table(df.dat$cov.fe)
-```
-
-```{r}
-
-table(df.dat$quart1)
-qrt.breaks = with(df.dat, round(c(rbind(unique(quart1),
-                            unique(quart2), 
-                            unique(quart3))),1)); qrt.breaks
-qrt.breaks1 = with(df.dat, round(unique(quart1)))
-
-# Source: https://coolbutuseless.github.io/2019/03/07/custom-axis-breaks-on-facetted-ggplot/
-
-count <- 0
-breaks_fun <- function(x) {
-  count <<- count + 1L
-  switch(
-    count,
-    qrt.breaks[1:3],
-    qrt.breaks[4:6],
-    qrt.breaks[7:9],
-    qrt.breaks[10:12]
-  )
-}
-
-
-hist.postmenop = ggplot(data=df.dat,
-       aes(x=iron.var)) + 
-  facet_wrap(cov.fe~., scale="free")+
-  geom_histogram(fill="grey") +
-  theme_bw() +
-  geom_vline(data= df.dat, aes(xintercept=quart1), color="green") +
-  geom_vline(data= df.dat, aes(xintercept=quart2), color="green") +
-  geom_vline(data= df.dat, aes(xintercept=quart3), color="green") +
-  scale_x_continuous(breaks = breaks_fun) +
-  labs(title="Histograms for postmenopausal sample") #, limits = c(-5, NA)) 
-
-
-count <- 0
-breaks_fun <- function(x) {
-  count <<- count + 1L
-  switch(
-    count,
-    qrt.breaks[1:3],
-    qrt.breaks[4:6],
-    qrt.breaks[7:9],
-    qrt.breaks[10:12]
-  )
-}
-
-# NOTE: have to re-run the breaks function every time you do the plot
-
-ggsave(hist.postmenop + scale_x_continuous(breaks = breaks_fun),
-       file="hist-postmenop.png")
-
-```
-
-![](hist-postmenop.png)
-
-
-
-
-### Look at lower quartile of iron vs rest for the postmenopausal stratified analysis 
-
-```{r, results='hide'}
-
-# 7/9/2020 Additional analysis estimating breast cancer HR for lowest quartile vs 2nd - 4th quartile
-# adapted from get.coef function
-var.fe = "fe"
-df.pc$var.fe = df.pc[var.fe]
-summary(df.pc$var.fe); summary(df.pc$fe)
-
-df.e = df.pc[!(is.na(df.pc$fe)),] # need to remove missing for cch to work
-summary(df.e$fe)
-
-#df.e2 = df.e[!(is.na(df.e$bmi2)) & df.e$bmi2=="4) 30+",]
-df.e2 = df.e
-
-
-
-table(df.e2$UMN_Iron_Subcohort)
-table(df.e2$subcohort)
-table(df.e2$event)
-with(df.e2, table(subcohort, event), exclude=NULL)
-
-# get quartiles
-qrts = quantile(df.e2$fe, c(0, 0.25, 0.5, 0.75, 1), na.rm=T)
-qrts2 = quantile(df.e2$fe, c(0, 0.25, 1), na.rm=T)
-#qrts = quantile(df1$iron.cov, c(0, 0.1, 0.5, 0.9, 1), na.rm=T)
-qrts; qrts2
-
-# Make a variable with cut points based on quartiles above
-df.e2$fe.cutq = cut(df.e2$fe, qrts, include.lowest = T, dig.lab=10)
-summary(df.e2$fe.cutq)
-df.e2$fe.cutq2 = cut(df.e2$fe, qrts2, include.lowest = T, dig.lab=10)
-summary(df.e2$fe.cutq2)
-
-# What is the median within those intervals? =====================
-dt = data.table(df.e2)
-setkey(dt, fe.cutq)
-medians = dt[,list(median=median(fe, na.rm=T)), by=fe.cutq]
-medians = data.frame(medians[complete.cases(medians)])
-medians
-
-# get median of untransformed serum iron marker
-medians.orig = if(var.fe %in% c("fertn.log")) dt[,list(median=median(exp(fertn.log), na.rm=T)), by=fe.cutq] else dt[,list(median=median(fe, na.rm=T)), by=fe.cutq]
-medians.orig = data.frame(medians.orig[complete.cases(medians.orig)])
-medians.orig
-
-# 1) Cox ph with quartiles ==================================
-
-sapply(df.e2[c("start.age", "c.age")], summary)
-
-n.size=50884
-
-# original analysis
-cox.qrt = cch(Surv(start.age, c.age, event) ~ fe.cutq , # + cluster(HH_PSID) # NOTE: clustering does not work
-             data=df.e2,
-             subcoh = ~subcohort,
-             id = ~ PSID,
-             cohort.size=n.size)
-
-cox.qrt
-exp(coef(cox.qrt))
-```
-
-```{r, results='markup'}
-summary(df.e2$fe.cutq2)
-df.e2$fe.cutq2 = relevel(df.e2$fe.cutq2, ref="(76,340]")
-
-# additional analysis comparing lowest quartile to rest of group
-cox.qrt2 = cch(Surv(start.age, c.age, event) ~ fe.cutq2 , # + cluster(HH_PSID) # NOTE: clustering does not work
-             data=df.e2,
-             subcoh = ~subcohort,
-             id = ~ PSID,
-             cohort.size=n.size)
-
-cox.qrt2
-exp(coef(cox.qrt2))
-
-get.ci(coef(summary(cox.qrt2)))
 
 ```

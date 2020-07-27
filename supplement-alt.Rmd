@@ -1,0 +1,270 @@
+--- 
+output:
+  pdf_document:
+    includes:
+      in_header: ../preamble-latex-nobookdown.tex
+    latex_engine: pdflatex
+    keep_tex: true
+    number_sections: yes
+    toc: no
+    fig_caption: true
+bibliography: ../bib/iron-lit.bib
+link-citations: yes
+geometry: margin=1.5cm
+description: "Summary of analyses"
+always_allow_html: true
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r , include=FALSE}
+knitr::opts_chunk$set(echo = F, 
+                      results = 'markup',
+                      warning = F,
+                      fig.width=10,
+                      fig.height=8)
+
+```
+
+
+
+```{r, echo=F}
+
+load(file="../sections/k1.RData") # section1.Rmd table
+load(file="../sections/k2-cch.RData") # section2-cch.Rmd table
+load(file="../sections/k2-cch2.RData") # section2-sensitivity-cch2.Rmd
+
+load(file="../sections/k11.RData") # section11.Rmd
+
+load(file="../sections/k4.RData") # cox.dat with Fe extremes from section4-cch.Rmd
+load(file="../sections/k4-post.RData") # cox.dat.post with Fe extremes from section4-cch-post.Rmd
+load(file="../sections/k4-pre.RData") # cox.dat.pre with Fe extremes from section4-cch-pre.Rmd
+
+load(file="../sections/k5.RData") # cox.dat2 with TSAT extremes from section5-cch.Rmd
+load(file="../sections/k5-post.RData") # cox.dat2.post with TSAT extremes from section5-cch-post.Rmd
+load(file="../sections/k5-pre.RData") # cox.dat2.pre with TSAT extremes from section5-cch-pre.Rmd
+
+load(file="../sections/k9.RData") # k9 with assn between iron biomarkers and cancer subtype from section9-rev.Rmd
+
+load(file="../sections/k2-race.RData") # k2.race from section10-cch.Rmd
+load(file="../sections/k2-bmi.RData") # k2.bmi from section10-cch.Rmd
+load(file="../sections/k2-bmi-single.RData") # k2.bmi from section10-cch.Rmd
+
+load(file="../sections/k2-race-pm.RData") # k2.race.pm from section10-cch-postmenoponly.Rmd
+load(file="../sections/k2-bmi-pm.RData") # k2.bmi.pm from section10-cch-postmenoponly.Rmd
+
+# extra tables after reviewer comments
+# ====================================
+load(file="../sections/premenop.RData") # premenop and premenop.table.dat from section2-cch-premenopause.Rmd
+load(file="../sections/postmenop.RData") # postmenop and postmenop.table.dat from section2-cch-postmenopause.Rmd
+
+load(file="../sections/tab-stage.RData") # tab.stage, wide.stage., cts4  from reviewer-extra-stage.Rmd
+
+load(file="../sections/k2-bmi-q1.RData") # k2.bmi.q1 from section10-cch-q1.Rmd
+load(file="../sections/premenop-q1-ref.RData") # premenop.q1, premenop.table.dat.q1, premenop.table.dat2.q1 from section2-cch-premenopause-q1-ref.Rmd
+load(file="../sections/postmenop-q1-ref.RData") # postmenop.q1, postmenop.table.dat.q1 from section2-cch-premenopause-q1-ref.Rmd
+```
+
+```{r, include=F}
+require(kableExtra)
+```
+
+
+<div id="refs"></div>
+
+\beginsupplement 
+
+
+```{r}
+k2.cch2
+```
+
+```{r}
+k11
+```
+
+
+\clearpage
+\newpage
+
+```{r}
+k2.race
+```
+
+\clearpage
+\newpage
+
+\vspace{-1em}
+
+```{r}
+k2.bmi
+```
+
+
+\vspace{-20em}
+
+```{r}
+k2.bmi.q1
+```
+
+\clearpage
+\newpage
+
+
+```{r, results='markup'}
+premenop
+```
+
+\clearpage
+\newpage
+
+```{r, results='markup'}
+postmenop
+```
+
+\clearpage
+\newpage
+
+
+```{r, results='markup'}
+premenop.q1
+```
+
+
+\clearpage
+\newpage
+
+```{r, results='markup'}
+postmenop.q1
+```
+
+
+\clearpage
+\newpage
+
+
+
+```{r}
+cox.dat$fe.val = "Ferritin"
+cox.dat2$fe.val = "Transferrin saturation"
+
+ex.dat = rbind(cox.dat[c("fe.val", "threshold", "coef", "n.threshold")],
+               cox.dat2[c("fe.val", "threshold", "coef", "n.threshold")])
+#ex.dat
+
+```
+
+
+```{r, include=F, eval=F}
+kable(ex.dat[,-1],
+      caption="Breast cancer HR by body iron status extreme thresholds",
+      booktabs=T,
+      col.names = c("Cut points for dichotomized thresholds", "HR (95\\% CI)", "n above/below threshold"),
+      escape=F) %>%
+  pack_rows("Ferritin $\\\\leq$ threshold ($\\\\mu$g/L)", 1,3, escape=F) %>%
+  pack_rows("Transferrin saturation $\\\\geq$ threshold (\\\\%)", 4, 7, escape=F) %>%
+  kable_styling(latex_options = c("HOLD_position"), font_size=10)
+  
+```
+
+
+```{r}
+
+# cox.dat.post$fe.val = "Ferritin $\\\\leq$ threshold ($\\\\mu$g/L)"
+# cox.dat.pre$fe.val = "Ferritin $\\\\leq$ threshold ($\\\\mu$g/L)"
+# 
+# cox.dat2.post$fe.val = "Transferrin saturation $\\\\geq$ threshold (\\\\%)"
+# cox.dat2.pre$fe.val = "Transferrin saturation $\\\\geq$ threshold (\\\\%)"
+ 
+cox.dat.post$fe.val = "Ferritin ($\\mu$g / L)"
+cox.dat.pre$fe.val = "Ferritin ($\\mu$g / L)"
+
+cox.dat2.post$fe.val = "Transferrin saturation (\\%)"
+cox.dat2.pre$fe.val = "Transferrin saturation (\\%)"
+
+cox.dat.post$menop = "Postmenopausal"
+cox.dat2.post$menop = "Postmenopausal"
+cox.dat2.pre$menop = "Premenopausal"
+cox.dat.pre$menop = "Premenopausal"
+
+ex.dat = rbind(cox.dat.post[c( "fe.val", "menop","threshold.f", "coef", "n.threshold", "high")],
+               cox.dat.pre[c( "fe.val", "menop", "threshold.f", "coef", "n.threshold", "high")],
+               cox.dat2.post[c( "fe.val", "menop","threshold.f", "coef", "n.threshold", "high")],
+               cox.dat2.pre[c( "fe.val", "menop", "threshold.f", "coef", "n.threshold", "high")])
+#ex.dat
+ex.dat = ex.dat[order(ex.dat$menop, ex.dat$high, ex.dat$fe.val),]
+
+ex.dat$high = factor(ex.dat$high, labels=c("Low", 
+                                           "High"))
+row.names(ex.dat) = NULL
+
+
+
+```
+
+
+\clearpage
+\newpage
+
+```{r}
+kable(ex.dat[,c("high", "fe.val", "threshold.f", "coef", "n.threshold")],
+      caption="Breast cancer hazard ratios by menopause status at baseline and body iron status extreme thresholds",
+      booktabs=T,
+      col.names = c("High/low indicator", "Iron measure", 
+                    "Cut points for dichotomized iron measure thresholds", "HR (95\\% CI)", 
+                    "n above/below threshold"),
+      escape=F) %>%
+  column_spec(1:4, width = "12em") %>%
+  collapse_rows(columns = 1:2, valign = "top") %>%
+  pack_rows("Postmenopausal", 1, 9, escape=F) %>%
+  pack_rows("Premenopausal", 10, 18, escape=F) %>%
+#  pack_rows("Ferritin $\\\\leq$ threshold ($\\\\mu$g/L)", 1,6, escape=F) %>%
+#  pack_rows("Transferrin saturation $\\\\geq$ threshold (\\\\%)", 7, 12, escape=F) %>%
+  kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size=10)
+  
+```
+
+
+```{r, include=F, eval=F}
+kable(ex.dat[,-1],
+      caption="Breast cancer hazard ratios by body iron status extreme thresholds",
+      booktabs=T,
+      col.names = c(  "Menopause status" , 
+                    "Cut points for dichotomized iron measure thresholds", "HR (95\\% CI)", "n above/below threshold"),
+      escape=F) %>%
+  column_spec(1:4, width = "12em") %>%
+  collapse_rows(columns = 1, valign = "top") %>%
+  pack_rows("Ferritin $\\\\leq$ threshold ($\\\\mu$g/L)", 1,6, escape=F) %>%
+  pack_rows("Transferrin saturation $\\\\geq$ threshold (\\\\%)", 7, 12, escape=F) %>%
+  kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size=10)
+  
+```
+
+\clearpage
+\newpage
+
+```{r}
+
+k9
+
+```
+
+\clearpage
+\newpage
+
+```{r, results='markup'}
+# Odds of breast cancers stages in case-only sample by iron levels
+tab.stage
+```
+
+
+\clearpage
+\newpage
+
+
+Supplemental text regarding sample handling and laboratory assessments
+
+The Advanced Research and Diagnostic Laboratory at the University of Minnesota acted as the central laboratory for this study, receiving 7,621 serum samples in straws in a frozen state packaged on dry ice in goblets of 100 samples per goblet. Samples were stored frozen at -80C until testing. To prepare samples for analysis the straw samples were thawed to room temperature, then the straw was cut with a scissor and the sample expelled into a labelled cryovial and capped. Scissors were cleaned with an alcohol pad between each sample. Vials were mixed by inversion immediately before testing. Analysis was performed on the Roche Cobas 6000 Chemistry analyzer (Roche Diagnostics, Mannheim, Germany) using Roche reagents and calibrators. Test methodologies and inter-assay coefficient of variation were as follows. Iron is a colorimetric FerroZine end-point assay with an interassay CV of 2.5\% at a concentration 77 ug/dL. Ferritin is particle enhanced immunoturbidimetric assay with an interassay CV of 2.8\% at a concentration of 259 ug/L. Unsaturated Iron Binding Capacity (UIBC) is a colorimetric assay with an inter-assay CV of 3.3\% at a concentration of 239 ug/dL. All samples had serum indices measurements for hemolysis, icterus and lipemia performed on the Roche Cobas 6000 analyzer by spectrophotometric method. Each assay has manufacture defined thresholds for each indice and results were not reported if this threshold was exceeded. Two levels of quality control were analyzed twice per day, once at the beginning of daily testing and once at the end. One quality control was a laboratory developed pooled serum sample and the other a Roche Precipath U commercially available product. Assay calibration was performed per manufacture specifications using manufacturer calibrators. Sample results were reported to the laboratory information system via electronic instrument interface only after quality control and calibration results were deemed acceptable per laboratory and manufacture standards.
+
+Results that could not be reported were primarily due to sample hemolysis. Our Cobas analyzer is programmed to automatically perform specimen integrity checks for hemolysis, lipemia and icterus. The UIBC assay is particularly sensitive to hemolysis and has the lowest hemolysis index threshold for acceptability which is why more UIBC test results were not reported.

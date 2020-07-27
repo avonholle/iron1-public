@@ -3,10 +3,9 @@ title: "Section 2: Association between iron status and breast cancer risk for wo
 output:
   pdf_document:
     toc: yes
-    toc_depth: 3
     number_sections: true
     includes:
-      in_header: header.tex 
+      in_header: header.tex
   html_document:
     theme: united
     toc: yes
@@ -50,9 +49,7 @@ require(Hmisc)
 require(janitor)
 require(foreign)
 require(haven)
-
 require(survminer)
-
 require(broom)
 
 ```
@@ -78,76 +75,44 @@ summary(df$c.age)
 
 # get information on menopause status by subcohort
 
+
 # subset to post-menopausal at baseline
 table(df$menop.status.f)
 table(df$menop.status)
-prop.table(table(df$menop.status.f)) # 67 % are post menopausal at baseline
+prop.table(table(df$menop.status.f)) # percent that are post menopausal at baseline
 
 counts.menop = with(df, addmargins(table(subcohort, menop.status.f))); counts.menop
-props.menop = with(df, prop.table(addmargins(table(menop.status.f, subcohort),2))) ; props.menop
+props.menop = with(df, prop.table(table(menop.status.f, subcohort),2)) ; props.menop
 
 save(counts.menop, props.menop, file="menop-counts.RData")
 ```
 
 
 ```{r}
-# How many non-subcohort members are excluded from premenopausal data given they 
-# experience menopause before the event
-# Assume they are still pre-menopausal at baseline.
 
-df$fu.meno.age.rev = with(df, ifelse( is.na(fu.meno.age)==T & menop.status==1, baseline.age, # if a person is missing menopause age but postmenopausal at baseline then put age at menopause as entry age.
-                                    ifelse(is.na(fu.meno.age)==T & menop.status==0, 99, fu.meno.age ))) # if there is no age at menopause and they are premenopausal at baseline then put 99 so they never experience menopause as a time-dept measure (no person is recorded above age 98 so put age 99)
+# non-subcohort members are excluded from premenopausal data given they 
+# experience menopause before the event
+df$fu.meno.age.rev = with(df, ifelse( is.na(fu.meno.age)==T & menop.status==1, baseline.age,
+                                    ifelse(is.na(fu.meno.age)==T & menop.status==0, 99, fu.meno.age )))
 table(df$fu.meno.age.rev)
 
 with(df, table(subcohort, event))
 df$c.age.alt = with(df, ifelse(menop.status==1, c.age, # if a person is postmenop at baseline then keep original censoring age
                                ifelse(menop.status==0 & c.age>fu.meno.age.rev & fu.meno.age.rev>start.age, fu.meno.age.rev, # premenopausal at baseline and censoring age after menopause age then make censoring age the age at menopause
-                                      ifelse(fu.meno.age.rev<=start.age, NA, c.age))))
+                                      ifelse(fu.meno.age.rev<=start.age, NA, c.age)))) # if people don't fit in above groups and menopause age before start age then set to missing, otherwise keep original censoring age.
 
-df$omit.case = with(df, ifelse(c.age.alt < c.age, 1, 0)) # if the censoring age based on menopause status for those who are premenopausal at baseline is less than the censoring age then remove them from analysis (if they are not in subcohort)
+df$omit.case = with(df, ifelse(c.age.alt < c.age, 1, 0))
+table(df$omit.case) 
+with(df, table(subcohort, omit.case)) 
 
-table(df$omit.case) # 344 out of 5582 are excluded from analysis
-with(df, table(subcohort, omit.case)) # 29/(291+2413=2704)=11% of cases were excluded from analysis
-
-with(df[df$menop.status==0,], table(subcohort, omit.case)) # 291/(509+291 = 800) = 36% of non-subcohort were excluded from analysis of premenopausal women
+with(df[df$menop.status==0,], table(subcohort, omit.case)) # some of non-subcohort were excluded from analysis of premenopausal women
 
 with(df[df$menop.status==0,], table(subcohort, omit.case))
 sum(with(df[df$menop.status==0,], table(subcohort, omit.case)))  
 
-# how many non-subcohort members are excluded from premenopausal data given they 
-# experience menopause before the event
-# should I assume they are still pre-menopausal at baseline?
-
-df$event.alt = with(df, ifelse(c.age.alt < c.age & subcohort==0, NA, # if alternative censor age based on menopause age is less than original censor age then no event for non-subcohort people
-                               ifelse(c.age.alt<c.age & subcohort==1, 0, event))) # if people have their event following menopause then they are changed to a non-event, otherwise event.
+df$event.alt = with(df, ifelse(c.age.alt < c.age & subcohort==0, NA, # if alternative censor age less than original censor age then no event (and not in subcohort)
+                               ifelse(c.age.alt<c.age & subcohort==1, 0, event))) # if in subcohort and alt censoring age less than original (menop occurs before cenoring) then set event to 0
 summary(df$event.alt)
-```
-
-```{r}
-
-# check data for person who experiences menopause before event in subcohort and no event
-head(df[which(df$c.age.alt < df$c.age & df$subcohort==1), c("PSID", "menop.status", 
-                                                            "fu.meno.age", 'fu.meno.age.rev', "subcohort",
-                                                            "start.age", "c.age",
-                                                            "c.age.alt", "event", "event.alt")])
-
-# check data for person who experiences menopause before event in subcohort and event
-head(df[which(df$c.age.alt < df$c.age & df$subcohort==1 & df$event==1), c("PSID", "menop.status", 
-                                                            "fu.meno.age", 'fu.meno.age.rev', "subcohort",
-                                                            "start.age", "c.age",
-                                                            "c.age.alt", "event", "event.alt")])
-
-# check data for person who experiences menopause before event in NON-subcohort
-head(df[which(df$c.age.alt < df$c.age & df$subcohort==0), c("PSID", "menop.status", 
-                                                            "fu.meno.age", 'fu.meno.age.rev', "subcohort",
-                                                            "start.age", "c.age",
-                                                            "c.age.alt", "event", "event.alt")])
-
-# check data for person who experiences menopause before event in NON-subcohort
-head(df[which(df$c.age.alt < df$c.age & df$subcohort==0), c("PSID", "menop.status", 
-                                                            "fu.meno.age", 'fu.meno.age.rev', "subcohort",
-                                                            "start.age", "c.age",
-                                                            "c.age.alt", "event", "event.alt")])
 
 ```
 
@@ -181,9 +146,13 @@ outcome.vars = c("fe", "fertn", "fesat")
 
 # time-dept menopause ==============================
 
-summary(df$fu.meno.age) # 892 missing
+summary(df$fu.meno.age) # 
 df$miss.meno.age = with(df, is.na(df$fu.meno.age))
-with(df, table(miss.meno.age, menop.status)) # 27 people are post-menopausal at baseline but no age at menopause. Put age at menopause at baseline age.
+with(df, table(miss.meno.age, menop.status)) # people are post-menopausal at baseline but no age at menopause. Put age at menopause at baseline age.
+
+df$fu.meno.age.rev = with(df, ifelse( is.na(fu.meno.age)==T & menop.status==1, baseline.age,
+                                    ifelse(is.na(fu.meno.age)==T & menop.status==0, 99, fu.meno.age )))
+summary(df$fu.meno.age.rev)
 
 df$miss.meno.age.rev = with(df, is.na(df$fu.meno.age.rev))
 with(df, table(miss.meno.age.rev, menop.status)) # check
@@ -196,12 +165,13 @@ dim(df)
 ```{r}
 
 df.tot = df[df$subcohort==1,] # use this data frame for quartile calcs. has subcohort for both pre- and postmenopause groups.
-dim(df.tot) # 3169
+dim(df.tot) 
 
 df = df[which(df$menop.status==0),]
-dim(df) # 1938
+dim(df) 
 
 ```
+
 
 
 ```{r}
@@ -257,6 +227,7 @@ projectedTrainIdeal.tot <-
   as.data.frame(scale(m.df.tot) %*% extractProjection(3,pca.log.tot),
                                  stringsAsFactors = FALSE)
 
+
 df.pc = cbind(projectedTrainIdeal, df[which(df$PSID %in% cc),])
 with(df.pc, cor(PC1, fe))
 
@@ -267,9 +238,6 @@ dim(df.pc.tot)
 summary(df.pc$fesat)
 hist(df.pc$fesat)
 ```
-
-
-
 
 ```{r}
 
@@ -336,89 +304,6 @@ get.info("fesat")
 outcome.vars = c("fe", "fertn.log", "fesat", 'PC1')
 
 
-# look at km to double check dip at lower values of fertn.log
-# no weighting so biased
-# ====================================================================
-
-summary(df.pc$fertn.log)
-qrts = quantile(df.pc$fertn.log, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
-df.pc$fertn.cutq = cut(df.pc$fertn.log, qrts, include.lowest = T, dig.lab=4)
-summary(df.pc$fertn.cutq)
-
-# Source: https://github.com/kassambara/survminer/issues/67
-fit = survfit(Surv(start.age, c.age.alt, event.alt) ~ fertn.cutq ,
-             data=df.pc)
-
-ggsurvplot(fit,  palette = "Dark2", 
-           censor = FALSE,
-           xlim=c(45,60))
-
-# now check for transferrin saturation
-
-# look at km double check fertn.log
-# ====================================================================
-
-summary(df.pc$fesat)
-qrts = quantile(df.pc$fesat, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
-df.pc$fesat.qrt = cut(df.pc$fesat, qrts, include.lowest = T, dig.lab=4)
-summary(df.pc$fesat.qrt)
-
-vars.include = c("start.age", "c.age.alt",
-                "event.alt", "fesat.qrt",
-                "subcohort")
-
-# Source: https://github.com/kassambara/survminer/issues/67
-fit = survfit(Surv(start.age, c.age.alt, event.alt) ~ fesat.qrt ,
-             data=df.pc[complete.cases(df.pc[vars.include]) & df.pc$start.age>45,])
-
-ggsurvplot(fit,  palette = "Dark2", 
-           censor =T,
-           xlim=c(45,60))
-
-# fertn
-# ==========================================
-summary(df.pc$fertn)
-qrts = quantile(df.pc$fertn, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
-df.pc$fertn.qrt = cut(df.pc$fertn, qrts, include.lowest = T, dig.lab=4)
-summary(df.pc$fertn.qrt)
-
-# now check for fe
-# ====================================================================
-
-summary(df.pc$fe)
-qrts = quantile(df.pc$fe, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
-df.pc$fe.qrt = cut(df.pc$fe, qrts, include.lowest = T, dig.lab=4)
-summary(df.pc$fe.qrt)
-
-vars.include = c("start.age", "c.age.alt",
-                "event.alt", "fesat.qrt",
-                "subcohort")
-
-# Source: https://github.com/kassambara/survminer/issues/67
-fit = survfit(Surv(start.age, c.age.alt, event.alt) ~ fe.qrt ,
-             data=df.pc[complete.cases(df.pc[vars.include]) & df.pc$start.age>45,])
-
-ggsurvplot(fit,  palette = "Dark2", 
-           censor =T,
-           xlim=c(45,60))
-
-# now double check the case cohort analysis
-
-summary(df.pc[vars.include])
-
-fit.cch = cch(Surv(start.age, c.age.alt, event.alt) ~ fesat.qrt, # + cluster(HH_PSID) # NOTE: clustering does not work
-             data=df.pc[complete.cases(df.pc[vars.include]),],
-             subcoh = ~subcohort,
-             id = ~ PSID,
-             cohort.size=50884)
-
-tidy(fit.cch)
-
-# make quartiles for pc
-summary(df.pc$PC1)
-qrts = quantile(df.pc$PC1, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
-df.pc$pc1.qrt = cut(df.pc$PC1, qrts, include.lowest = T, dig.lab=4)
-summary(df.pc$pc1.qrt)
 ```
 
 
@@ -450,15 +335,11 @@ df1=df1[!(is.na(df1$iron.cov)),] # need to remove missing for cch to work
 dim(df1)
 summary(df1$iron.cov)
 
-
 # get untransformed values if log transform ferritin
 if(var.fe=="fertn.log") {
  qrts = quantile(df1$fertn.log, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
  qrts2 = quantile(df1$fertn, c(0, 0.25, 0.5, 0.75, 1), na.rm=T)
   
-  #qrts = quantile(log(df.tot$fertn), c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use total subcohort for quartile cutpoints
-  #qrts2 = quantile(df.tot$fertn, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use total subcohort for quartile cutpoints
-
   df1$fe.cutq = cut(df1$fertn.log, qrts, include.lowest = T, dig.lab=4)
   df1$fe.cutq2 = cut(df1$fertn, qrts2, include.lowest = T, dig.lab=4)
   
@@ -466,8 +347,6 @@ if(var.fe=="fertn.log") {
   table(is.na(df1$fe.cutq2)); table(df1$fe.cutq2)
   
   dt.extra = data.table(df1) # use whole subset of sample (for premenopausal women)
-  #dt.extra = data.table(df1[df1$subcohort==0,]) # use subcohort for quartile calcs
-  #dt.extra = data.table(df.tot) # use total subchort for quartile calcs
   setkey(dt.extra, fe.cutq2)
   medians =  dt.extra[,list(median=median(fertn, na.rm=T)), by=fe.cutq2] # get medians in interval from the analysis data set
   medians = data.frame(medians[complete.cases(medians)])
@@ -481,10 +360,6 @@ if(var.fe=="fertn.log") {
   # get quartiles
   qrts = quantile(df1$iron.cov, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # quartiles based on analysis sample
   
-  # designate the iron covariate for the total subcohort sample
-  #df.tot$iron.cov = df.tot[,var.fe] # source: 
-  #qrts = quantile(df.tot$iron.cov, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # quartiles based on entire subcohort sample (pre- and postmenopausal)
-#qrts = quantile(df1$iron.cov, c(0, 0.1, 0.5, 0.9, 1), na.rm=T)
 qrts
 
 # make a variable with cut points based on quartiles above
@@ -513,6 +388,7 @@ cell.ct
 # Modify censoring age and cut off at age at menopause
 df1.sub = df1; dim(df1.sub)
 
+
 vars. = c("start.age", "c.age", "c.age.alt", "event", "event.alt", "fe.cutq", "subcohort", "PSID",
                                          "fu.meno.age.rev")
 df1.sub2 = df1.sub[complete.cases(df1.sub[,vars.]),]; dim(df1.sub2)
@@ -523,14 +399,26 @@ df1.sub2 = df1.sub[complete.cases(df1.sub[,vars.]),]; dim(df1.sub2)
 # Note: There must not be any censored observations outside the subcohort.
 # no censor time lt the entry time
 dim(df1.sub2) - dim(df1) # remove cases that have menopause before censoring -- not an event by age of menopause.
-(dim(df1.sub2) - dim(df1))/dim(df1.sub2) # around 30% removed.
+(dim(df1.sub2) - dim(df1))/dim(df1.sub2) 
 
 df1 = df1.sub2[!(df1.sub2$c.age<df1.sub2$start.age & df1.sub2$c.age.alt<=df1.sub2$start.age),]
 
-# ==========================================
 # run Cox models ==========================
 
-cox.qrt = cch(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq , # + cluster(HH_PSID) # NOTE: clustering does not work
+# extra section to look at ferritin model
+test = coxph(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq , 
+             data=df1)
+test.zph = cox.zph(test)
+print(test.zph)
+plot(test.zph)
+
+cch(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq , 
+             data=df1,
+             subcoh = ~subcohort,
+             id = ~ PSID,
+             cohort.size=n.size)
+
+cox.qrt = cch(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq ,
              data=df1,
              subcoh = ~subcohort,
              id = ~ PSID,
@@ -538,10 +426,11 @@ cox.qrt = cch(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq , # + cluster(HH_P
 
 cox.qrt
 cox.qrt$n
-cq = coef(summary(cox.qrt)); cq
+cq = coef(summary(cox.qrt))
 coefs.qrts.p = round(cq[1,4],3); coefs.qrts.p
 
-coefs.qrts = get.ci(cq)[1:3]; coefs.qrts
+coefs.qrts = get.ci(cq)[1:3]
+coefs.qrts
 names(summary(cox.qrt))
 n.event = summary(cox.qrt)$subcohort.size
 
@@ -549,12 +438,6 @@ tbl.qrt = kable(coef(summary(cox.qrt)), booktabs=T,
                 caption=paste0("iron.cov = ", var.fe)) %>%
   kable_styling(latex_options = c("HOLD_position"), full_width = F)
 
-# Note: need to switch to year-interval data for time-dept covariates. See section3.Rmd for explanation
-# ============= beginning of data handling for year interval data ===================
-
-# NOTE: you cannot use time-dependent variables with this approach to case-cohort data
-
-# ============= end of data handling for year interval data ===================
 
 # 2) Cox ph with quartiles, adjusted ========================================
 
@@ -569,9 +452,7 @@ confounder.list.baseline = c('alc.f4',  'educ.f2', 'bmi', 'birth.control.f', "ev
 list.cc = c('alc.f4',  'educ.f2', 'bmi', 'birth.control.f', "ever.hrt.f", 'smoke.f2',
                      'age.menarche', 'age.firstbirth.cat')
 
-
-(dim(df1) - dim(df1[complete.cases(df1[list.cc]),])) # people are left out with complete case analysis. 
-(dim(df1) - dim(df1[complete.cases(df1[list.cc]),]))/dim(df1)[1] # proportion
+dim(df1) - dim(df1[complete.cases(df1[list.cc]),]) # people are left out with complete case analysis.
 
 form.qrt.adj = as.formula(paste0("Surv(start.age, c.age.alt, event.alt) ~ ", 
                          paste0(c("fe.cutq",
@@ -584,10 +465,11 @@ cox.qrt.adj= cch(form.qrt.adj,
                   cohort.size = n.size)
 
 cox.qrt.adj
-cqa = coef(summary(cox.qrt.adj)); cqa
+cqa = coef(summary(cox.qrt.adj))
 
 # output coef with 95% ci
-coefs.qrts.adj = get.ci(cqa)[1:3]; coefs.qrts.adj
+coefs.qrts.adj = get.ci(cqa)[1:3]
+coefs.qrts.adj
 
 coefs.qrts.adj.p = round(cqa[1,4],3); coefs.qrts.adj.p
 
@@ -619,10 +501,11 @@ cox.lin
 # plot the linear values in naive data analysis without Prentice weighting ============
 # NOTE: does confirm the lower level of risk at either end of iron
 
-cox.linn = coxph(Surv(start.age, c.age.alt, event) ~ pspline(iron.cov, df=4),
+cox.linn = coxph(Surv(start.age, c.age, event) ~ pspline(iron.cov, df=4),
              data=df1)
 summary(cox.linn)
 termplot(cox.linn, term=1, se=TRUE, col.term=1, col.se=1)
+
 
 cc = coef(summary(cox.lin))
 
@@ -638,7 +521,6 @@ coefs.lin
 tbl.lin = kable(coef(summary(cox.lin)), booktabs=T,
                 caption=paste0("iron.cov = ", var.fe))  %>%
   kable_styling(latex_options = c("HOLD_position"), full_width = F)
-
 
 # 4) Cox ph with continuous covariate, adjusted =========================
 
@@ -754,6 +636,7 @@ return(list(df.info, tbl.qrt, tbl.qrt.adj, tbl.lin, tbl.lin.adj,
 # Run function over all five covariates
 
 outcome.vars2 = c("fe.scale", "fertn.scale", "fesat.scale", "tibc.scale", "uibc.scale")
+
 names(df)
 
 outcome.vars3 = c("UMN_Iron_Baseline_FE",
@@ -811,9 +694,8 @@ cox.dat$adj = factor(cox.dat$adj, levels=c("Median",
 levels(cox.dat$adj)
 
 head(cox.dat)
-# Change data to match table format from Quintana-Pacheco
 
-# take out the  Median(log trans)
+# take out the median(log trans)
 cox.dat = cox.dat[!(cox.dat$adj=='Median(log trans)'),]
 
 cox.dat.wide = dcast(cox.dat, cov.fe + adj ~ rows, value.var="coef")
@@ -878,33 +760,25 @@ premenop = kable(cox.dat.wide[,-1],
       caption = "Breast cancer risk associated with increasing levels of iron-related biomarkers for women with premenopausal person-time.",
       booktabs=T,
       col.names = c( "Biomarkers",
-                     "Quartile 1",
+                     "Quartile 1$^c$",
                      "Quartile 2", 
                      "Quartile 3",
                      "Quartile 4",
                      " "),
       escape=F) %>%
   #mutate_all(linebreak) %>% # Source: http://haozhu233.github.io/kableExtra/best_practice_for_newline_in_latex_table.pdf
-  add_header_above(c(" ",  "Quartile of iron-related biomarker" = 4, "Linear trend over quartiles$^c$" = 1), escape=F) %>%
+  add_header_above(c(" ",  "Quartile of iron-related biomarker" = 4, "Linear trend over quartiles$^d$" = 1), escape=F) %>%
   pack_rows("Iron ($\\\\mu$g/dL)", 1, 5, escape=F) %>%
   pack_rows("Ferritin$^b$ ($\\\\mu$g/dL)", 6, 10, escape=F) %>%
   pack_rows("Transferrin saturation (\\\\%)", 11, 15, escape=F) %>%
   pack_rows("First principal component", 16, 20) %>%
   column_spec(c(6), width = "4cm") %>% # NOTE: this has to come first to change row width?
-#  pack_rows("TIBC", 13, 16) %>%
-#  pack_rows("UIBC", 17, 20) %>% 
-  # footnote(alphabet = c("Ferritin is log tranformed",
-  #                       "Adjusted for alcohol, education, baseline BMI, baseline HRT (ever/never), baseline oral contraceptive use (any use? ever/never), age at menarche, age at first birth, early menopause (<=45 years)"), 
-  #          general="Bold values indicate statistical significance at alpha = 0.05.",
-  #          threeparttable=T) %>% # source: https://rdrr.io/cran/kableExtra/man/footnote.html
   footnote(alphabet = c("Adjusted for  baseline smoking, alcohol, education,  HRT, age at menarche, age at first birth, oral contraceptive use, and BMI.",
                         "log transformed",
+                        "For first quartile compared to aggregate of upper three quartiles, the adjusted HR (95% CI) is 0.70 (0.51, 0.97) for iron, 0.73 (0.54, 0.99) for ferritin, 0.71 (0.52, 0.96) for transferrin saturation, and 0.64 (0.47, 0.88) for the first PC.",
                         "Iron covariate in quartile units"), 
            #general="Bold values indicate statistical significance at alpha = 0.05.",
            threeparttable=T) %>% # source: https://rdrr.io/cran/kableExtra/man/footnote.html
-  # column_spec(1, width = "3.5cm") %>%
-  # column_spec(2:3, width = "1cm") %>%
-  # column_spec(4:7, width = "3cm") %>%
   kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size=10)
   
 premenop.table.dat = cox.dat.wide
@@ -922,6 +796,7 @@ save(premenop, premenop.table.dat, premenop.table.dat2,
 # 7/9/2020 Additional analysis estimating breast cancer HR for lowest quartile vs 2nd - 4th quartile
 # adapted from get.coef function
 
+
 makedat = function(iron.variable){
 
   var.fe = iron.variable #"fe"
@@ -930,7 +805,9 @@ makedat = function(iron.variable){
   
   summary(df.pc$var.fe); summary(df.pc$fe)
   
-  df.e = df.pc[!(is.na(df.pc$var.fe)),] # need to remove missing for cch to work
+  miss.vars = c("var.fe", "c.age.alt", "event.alt")
+  
+  df.e = df.pc[complete.cases(df.pc[miss.vars]),] # need to remove missing for cch to work
   summary(df.e$var.fe)
   
   table(df.e$UMN_Iron_Subcohort)
@@ -971,12 +848,10 @@ df.fe=makedat("fe")
 sapply(df.fe[c("start.age", "c.age")], summary)
 n.size=50884
 
-# original analysis
-vars1 = c("start.age", "c.age.alt", "event.alt", "fe.cutq")
-summary(df.fe[vars1])
 
-cox.qrt = cch(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq , # + cluster(HH_PSID) # NOTE: clustering does not work
-             data=df.fe[complete.cases(df.fe[vars1]),],
+# original analysis
+cox.qrt = cch(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq , 
+             data=df.fe,
              subcoh = ~subcohort,
              id = ~ PSID,
              cohort.size=n.size)
@@ -991,10 +866,9 @@ df.fe$fe.cutq2 = relevel(df.fe$fe.cutq2, ref="(70,2.8e+02]")
 
 # additional analysis comparing lowest quartile to rest of group
 table(df.fe$fe.cutq2)
-vars2 = c("start.age", "c.age.alt", "event.alt", "fe.cutq2")
 
-cox.qrt2 = cch(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq2, # + cluster(HH_PSID) # NOTE: clustering does not work
-             data=df.fe[complete.cases(df.fe[vars2]),],
+cox.qrt2 = cch(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq2, 
+             data=df.fe,
              subcoh = ~subcohort,
              id = ~ PSID,
              cohort.size=n.size)
@@ -1013,13 +887,12 @@ get.ci(coef(summary(cox.qrt2)))
 df.fertn=makedat("fertn.log")
 
 summary(df.fertn$fe.cutq2)
-df.fertn$fe.cutq2 = relevel(df.fertn$fe.cutq2, ref="(3.1,7.4]") # pick the upper group as the referent
+df.fertn$fe.cutq2 = relevel(df.fertn$fe.cutq2, ref="(3,7.4]") # pick the upper group as the referent
 summary(df.fertn$fe.cutq2)
-vars2 = c("start.age", "c.age.alt", "event.alt", "fe.cutq2")
 
 # additional analysis comparing lowest quartile to rest of group
-cox.qrt2 = cch(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq2 , # + cluster(HH_PSID) # NOTE: clustering does not work
-             data=df.fertn[complete.cases(df.fertn[vars2]),],
+cox.qrt2 = cch(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq2 , 
+             data=df.fertn,
              subcoh = ~subcohort,
              id = ~ PSID,
              cohort.size=n.size)
@@ -1044,8 +917,8 @@ df.fesat$fe.cutq2 = relevel(df.fesat$fe.cutq2, ref="(21,90]") # pick the upper g
 summary(df.fesat$fe.cutq2)
 
 # additional analysis comparing lowest quartile to rest of group
-cox.qrt2 = cch(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq2 , # + cluster(HH_PSID) # NOTE: clustering does not work
-             data=df.fesat[complete.cases(df.fesat[vars2]),],
+cox.qrt2 = cch(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq2 , 
+             data=df.fesat,
              subcoh = ~subcohort,
              id = ~ PSID,
              cohort.size=n.size)
@@ -1066,12 +939,12 @@ get.ci(coef(summary(cox.qrt2)))
 df.pc=makedat("PC1")
 
 summary(df.pc$fe.cutq2)
-df.pc$fe.cutq2 = relevel(df.pc$fe.cutq2, ref="(-0.8,4.8]") # pick the upper group as the referent
+df.pc$fe.cutq2 = relevel(df.pc$fe.cutq2, ref="(-0.85,4.8]") # pick the upper group as the referent
 summary(df.pc$fe.cutq2)
 
 # additional analysis comparing lowest quartile to rest of group
-cox.qrt2 = cch(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq2 , # + cluster(HH_PSID) # NOTE: clustering does not work
-             data=df.pc[complete.cases(df.pc[vars2]),],
+cox.qrt2 = cch(Surv(start.age, c.age.alt, event.alt) ~ fe.cutq2 ,
+             data=df.pc,
              subcoh = ~subcohort,
              id = ~ PSID,
              cohort.size=n.size)
@@ -1144,26 +1017,6 @@ summary(df$UMN_Iron_Baseline_FE)
 quantile(df$UMN_Iron_Baseline_FE, c(0, 0.01, 0.5, 0.99, 1), na.rm=T)
 
 quantile(df$UMN_Iron_Baseline_FERTN, c(0, 0.15, 0.5, 0.99, 1), na.rm=T)
-
-```
-
-## spline plots
-
-
-```{r}
-# extract out eigth element from each list, a coxph with spline (no weights) -- make plot
-spline.un.list = lapply(models1, '[[', 8)
-#class(spline.un.list[[1]])
-names(spline.un.list) = outcome.vars
-names(spline.un.list)
-
-outcome.vars
-
-save(spline.un.list, file="splines.RData")
-
-lapply(spline.un.list, function(x) {paste(names(x))
-  termplot(x, term=1, se=TRUE, col.term=1, col.se=1)})
-
 
 ```
 
@@ -1246,8 +1099,44 @@ ggsave(hist.premenop + scale_x_continuous(breaks = breaks_fun),
 ![](hist-premenop.png)
 
 
-# Kaplan Meier plots
+# KM plots
 
+```{r}
+# data prep
+# ferritin quart for km plots
+summary(df.pc$fertn.log)
+qrts = quantile(df.pc$fertn.log, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
+df.pc$fertn.cutq = cut(df.pc$fertn.log, qrts, include.lowest = T, dig.lab=4)
+summary(df.pc$fertn.cutq)
+
+# transferrin saturation
+
+summary(df.pc$fesat)
+qrts = quantile(df.pc$fesat, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
+df.pc$fesat.qrt = cut(df.pc$fesat, qrts, include.lowest = T, dig.lab=4)
+summary(df.pc$fesat.qrt)
+
+# fertn
+# ==========================================
+summary(df.pc$fertn)
+qrts = quantile(df.pc$fertn, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
+df.pc$fertn.qrt = cut(df.pc$fertn, qrts, include.lowest = T, dig.lab=4)
+summary(df.pc$fertn.qrt)
+
+# fe
+# ====================================================================
+
+summary(df.pc$fe)
+qrts = quantile(df.pc$fe, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
+df.pc$fe.qrt = cut(df.pc$fe, qrts, include.lowest = T, dig.lab=4)
+summary(df.pc$fe.qrt)
+
+# make quartiles for pc
+summary(df.pc$PC1)
+qrts = quantile(df.pc$PC1, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
+df.pc$pc1.qrt = cut(df.pc$PC1, qrts, include.lowest = T, dig.lab=4)
+summary(df.pc$pc1.qrt)
+```
 
 
 ```{r, eval=T, include=F}
@@ -1301,21 +1190,57 @@ head(ccdat[ccdat$subcohort==0,]$PSID) # some people not in subcohort
 # check
 vars.include = c("PSID", "start.age", "tstart",
                  "c.age.alt", "tstop",
-                "event",
+                "event", "fesat.qrt",
                 "subcohort")
 
-#head(ccdat[ccdat$PSID=="00224_100315",vars.include])
-#head(ccdat.rev[ccdat$PSID=="00224_100315",vars.include])
+head(ccdat[ccdat$PSID=="00224_100315",vars.include])
+head(ccdat.rev[ccdat$PSID=="00224_100315",vars.include])
 
 # make start time immediately before stop time for non-subcohort
 ccdat.rev$tstart.rev = with(ccdat.rev, ifelse(subcohort==0, tstop-0.0001, tstart))
 # check
-#head(ccdat.rev[ccdat$PSID=="00224_100315",c(vars.include, "tstart.rev")])
+head(ccdat.rev[ccdat$PSID=="00224_100315",c(vars.include, "tstart.rev")])
 
 # Put cases in subcohort in sample twice. once for time before event and again for time at event: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2216006/
 # how many people with event in subcohort?
 
+```
 
+```{r}
+# Test out kaplan meier plot for ferritin using counting process method above
+names.fertn = levels(factor(ccdat.rev$fertn.cutq)); names.fertn
+
+sfit1 = survfit(Surv(tstart.rev, tstop, event) ~ 1, 
+               data = ccdat.rev[ccdat.rev$fertn.cutq==names.fertn[[1]],])
+summary(sfit1)
+
+
+sest1 = sfit1$surv[sfit1$n.event>0]
+sest1
+
+ecnt1 = sfit1$n.event[sfit1$n.event>0]
+ecnt1
+
+km.times1 = sfit1$time[sfit1$n.event>0]
+km.times1
+
+# subcohort of size m and a cohort of size n
+m = dim(df.pc[df.pc$subcohort==1,])[1] # 1005
+n = 50884
+  
+km1 = rep(sest1^(m/n), ecnt1) 
+head(km1)
+length(km1) #499
+
+# plot km data?
+km.times2 = rep(km.times1, ecnt1)
+
+km.data = data.frame(km=km1, 
+                     time=km.times2)
+
+ggplot(data=km.data, aes(x=time, y=km)) + 
+  geom_step() +
+  xlim(35,55) + ylim(0.9,1)
 
 ```
 
@@ -1564,48 +1489,3 @@ pval
 save(pval, km.plot, file="prem-km-pc1.Rmd")
 
 ```
-
-
-
-```{r, include=F, eval=F}
-# Look at km with the counting process data set from 
-# Source: https://link.springer.com/article/10.1186/1471-2288-13-88
-# above.
-
-# these are incorrect. see above
-
-# Source: https://github.com/kassambara/survminer/issues/67
-fit = survfit(Surv(start.age, c.age.alt, event) ~ fesat.qrt ,
-             data=ccdat.rev)
-
-ggsurvplot(fit,  palette = "Dark2", 
-           censor=T,
-           xlim=c(35,60),
-           ylim=c(0.5,1),
-           break.time.by=5)
-
-
-fit = survfit(Surv(start.age, c.age.alt, event) ~ fe.qrt ,
-             data=ccdat.rev)
-
-ggsurvplot(fit,  palette = "Dark2", 
-           censor=T,
-           xlim=c(35,60),
-           ylim=c(0.5,1),
-           break.time.by=5)
-
-# fertn.qrt
-names(ccdat.rev)
-summary(ccdat.rev$fertn.cutq)
-
-fit = survfit(Surv(start.age, c.age.alt, event) ~ fertn.cutq ,
-             data=ccdat.rev)
-
-ggsurvplot(fit,  palette = "Dark2", 
-           censor=T,
-           xlim=c(35,60),
-           ylim=c(0.5,1),
-           break.time.by=5)
-
-```
-
