@@ -1377,7 +1377,7 @@ pval$min.p = do.call(pmin, pval[,c("test.time", "test.time.rank", "test.km")])
 pval
 
 # save for reviewer-tables.Rmd
-save(pval, km.plot, file="prem-km-fertn.Rmd")
+save(pval, km.plot, file="prem-km-fertn.RData")
 
 ```
 
@@ -1413,7 +1413,7 @@ pval$min.p = do.call(pmin, pval[,c("test.time", "test.time.rank", "test.km")])
 pval
 
 # save for reviewer-tables.Rmd
-save(pval, km.plot, file="prem-km-fe.Rmd")
+save(pval, km.plot, file="prem-km-fe.RData")
 
 ```
 
@@ -1449,7 +1449,7 @@ pval$min.p = do.call(pmin, pval[,c("test.time", "test.time.rank", "test.km")])
 pval
 
 # save for reviewer-tables.Rmd
-save(pval, km.plot, file="prem-km-fesat.Rmd")
+save(pval, km.plot, file="prem-km-fesat.RData")
 
 ```
 
@@ -1469,14 +1469,31 @@ df.pc1.km. = sapply(list.pc1.km, "[", 3)
 df.pc1.km = do.call(rbind.data.frame, df.pc1.km.)
 dim(df.pc1.km)
 summary(df.pc1.km)
+levels(df.pc1.km$strata)
+
+
+# source: http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/
+#palette using black
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 km.plot = ggplot(data=df.pc1.km,
        aes(x=time, y=km, colour=strata)) + 
-  labs(title=ironvar2)+
-  geom_step() +
-  xlim(40,55) + ylim(0.97,1) +
-  theme_bw()
+  labs(title="Survival probability by quartiles of first principal \ncomponent of three primary iron measures.",
+       x="Age (years)",
+       y="Survival probability",
+       caption="Note: Lowest quartile indicates lowest iron values") +
+  geom_step(size=1) +
+  xlim(40,55)  +
+  ylim(0.975,1)+
+  scale_color_manual(name = "Quartiles",
+                     labels = c("Q1", "Q2", "Q3", "Q4"), 
+                     values = cbbPalette) +
+  theme_bw(base_size = 22)
 km.plot
+
+png("km-plot.png", width=800, height=800)
+  km.plot
+dev.off()
 
 # extract out p-vals testing for violation of ph
 pval. = sapply(list.pc1.km, "[", 2) 
@@ -1486,6 +1503,6 @@ pval$min.p = do.call(pmin, pval[,c("test.time", "test.time.rank", "test.km")])
 pval
 
 # save for reviewer-tables.Rmd
-save(pval, km.plot, file="prem-km-pc1.Rmd")
+save(pval, km.plot, file="prem-km-pc1.RData")
 
 ```

@@ -1,0 +1,176 @@
+---
+title: "Section 1: Descriptive statistics -- figures"
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    theme: united
+    toc: no
+editor_options:
+  chunk_output_type: console
+header-includes:
+ \usepackage{float}
+---
+
+# Table 1. Summary statistics
+
+```{r , include=FALSE}
+knitr::opts_chunk$set(echo = T, 
+                      results = 'markup',
+                      warning = F,
+                      fig.pos = 'H')
+
+
+#runif(1, 0, 10^8)
+set.seed(74268794)
+
+```
+
+
+```{r, include=F}
+# bring in packages
+require(knitr)
+require(haven)
+require(data.table)
+require(tableone)
+require(ggplot2)
+require(kableExtra)
+require(rowr)
+require(stargazer)
+library("PerformanceAnalytics")
+require(ggpubr)
+require(labelled)
+```
+
+
+## Violin plot of serum iron values (with and without log transform)
+
+
+### Values from derived variables
+
+```{r}
+
+load(file="../sections/updated-data-iron.RData") # has df3 from section1.Rmd
+
+iron.vars = c('fe', 'fertn', 'fesat', 'tibc', 'uibc')
+iron.long2 = melt(df3, 
+                  id.vars = c("PSID"),
+                  measure.vars = iron.vars)
+iron.long2 = iron.long2[complete.cases(iron.long2)==T,]
+dim(iron.long2)
+head(iron.long2)
+
+ggplot(data=iron.long2, aes(variable, value)) + geom_violin() + theme_bw()
+#ggplot(data=iron.long.sub1, aes(variable, value)) + geom_violin() + theme_bw()
+
+# look at log transform
+ggplot(data=iron.long2, aes(variable, log(value))) + geom_violin() + theme_bw()
+
+```
+
+
+```{r}
+# export for poster
+
+p1 = ggplot(data=iron.long2, aes(variable, value)) +
+  geom_violin() + 
+  theme_bw(base_size=20) +
+  labs(x="Serum iron",
+         y="Value") +
+  scale_x_discrete(breaks=c("fe", "fertn", "fesat", "tibc", "uibc"),
+                      labels=c(expression(paste("Iron (",mu,"g/dL)")), 
+                               expression(paste("Ferritin (",mu,"g/L)")),
+                               "Transferrin \nsaturation (%)", 
+                               expression(paste("TIBC (",mu,"g/dL)")), 
+                               expression(paste("UIBC (",mu,"g/dL)")))) +
+   theme(axis.text.x = element_text(vjust=-2,
+                                     hjust=0.5), 
+         axis.title.x = element_text(vjust=-2))
+
+p1
+
+p1.a = ggplot(data=iron.long2[iron.long2$variable %in% c("fe", "tibc", "uibc"),], 
+              aes(variable, value)) +
+  geom_violin() + 
+  theme_bw(base_size=20) +
+  labs(x="",
+         y="Value") +
+  scale_x_discrete(breaks=c("fe", "tibc", "uibc"),
+                      labels=c(expression(paste("Iron (",mu,"g/dL)")), 
+                               expression(paste("TIBC (",mu,"g/dL)")), 
+                               expression(paste("UIBC (",mu,"g/dL)")))) +
+   theme(axis.text.x = element_text(vjust=-2,
+                                     hjust=0.5,
+                                    size=14), 
+         axis.title.x = element_text(vjust=-2))
+p1.a
+
+
+p1.b = ggplot(data=iron.long2[iron.long2$variable %in% c("fertn"),], 
+              aes(variable, value)) +
+  geom_violin() + 
+  theme_bw(base_size=20) +
+  labs(x="",
+         y="") +
+  scale_x_discrete(breaks=c("fertn"),
+                      labels=c(expression(paste("Ferritin (",mu,"g/L)")))) +
+   theme(axis.text.x = element_text(vjust=-2,
+                                     hjust=0.5), 
+         axis.title.x = element_text(vjust=-2))
+p1.b
+
+p1.c = ggplot(data=iron.long2[iron.long2$variable %in% c("fesat"),], 
+              aes(variable, value)) +
+  geom_violin() + 
+  theme_bw(base_size=20) +
+  labs(x="",
+         y="") +
+  scale_x_discrete(breaks=c("fesat"),
+                      labels=c("Transferrin \nsaturation (%)")) +
+   theme(axis.text.x = element_text(vjust=-2,
+                                     hjust=0.5), 
+         axis.title.x = element_text(vjust=-2))
+p1.c
+
+p1.rev = ggarrange(p1.a, p1.b, p1.c, 
+          ncol=3,
+          widths=c(2,1,1))
+
+ggsave(p1.rev, file="iron-violin.png", dpi=600, width=10, height=6)
+
+```
+
+
+#### Correlation between serum iron biomarkers
+
+```{r, results='markup', echo=TRUE}
+
+# NOTE: use the derived variables
+
+# covariance matrix
+sub.dat = df3[iron.vars]
+cor1 = cor(sub.dat, use="complete.obs")
+cor1
+
+# correlation matrix
+cov2cor(cor1)
+```
+
+
+#### Correlation plots
+
+Original data
+
+```{r}
+chart.Correlation(sub.dat, histogram=TRUE, pch=19)
+```
+
+\clearpage
+\newpage
+
+log-transformed data
+
+```{r}
+chart.Correlation(log(sub.dat), histogram=TRUE, pch=19)
+```
+
