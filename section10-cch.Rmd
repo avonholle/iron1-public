@@ -840,7 +840,7 @@ k2.bmi = kable(bmi.dat.df.wide.tab,
              threeparttable=T, escape=F)  # source: https://rdrr.io/cran/kableExtra/man/footnote.html
 
 
-save(k2.bmi, file="../sections/k2-bmi.RData")
+save(k2.bmi, bmi.dat.df.wide.tab, file="../sections/k2-bmi.RData")
 
 ```
 

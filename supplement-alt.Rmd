@@ -1,20 +1,23 @@
 --- 
+always_allow_html: yes
+bibliography: ../bib/iron-lit.bib
+description: Summary of analyses
+editor_options:
+  chunk_output_type: console
+geometry: margin=1.5cm
+link-citations: yes
 output:
+  html_document:
+    df_print: paged
+    toc: no
   pdf_document:
+    fig_caption: yes
     includes:
       in_header: ../preamble-latex-nobookdown.tex
+    keep_tex: yes
     latex_engine: pdflatex
-    keep_tex: true
     number_sections: yes
     toc: no
-    fig_caption: true
-bibliography: ../bib/iron-lit.bib
-link-citations: yes
-geometry: margin=1.5cm
-description: "Summary of analyses"
-always_allow_html: true
-editor_options: 
-  chunk_output_type: console
 ---
 
 
@@ -63,7 +66,8 @@ load(file="../sections/tab-stage.RData") # tab.stage, wide.stage., cts4  from re
 
 load(file="../sections/k2-bmi-q1.RData") # k2.bmi.q1 from section10-cch-q1.Rmd
 load(file="../sections/premenop-q1-ref.RData") # premenop.q1, premenop.table.dat.q1, premenop.table.dat2.q1 from section2-cch-premenopause-q1-ref.Rmd
-load(file="../sections/postmenop-q1-ref.RData") # postmenop.q1, postmenop.table.dat.q1 from section2-cch-premenopause-q1-ref.Rmd
+load(file="../sections/postmenop-q1-ref.RData") # postmenop.q1, postmenop.table.dat.q1 from section2-cch-postmenopause-q1-ref.Rmd
+
 ```
 
 ```{r, include=F}
@@ -97,8 +101,30 @@ k2.race
 
 \vspace{-1em}
 
+<!-- Source: section10-cch.Rmd -->
+
 ```{r}
-k2.bmi
+# this table removes the footnote with q1 index group HRs
+kable(bmi.dat.df.wide.tab,
+               align='lllllllc',
+      caption = "Breast cancer hazard ratios by serum iron covariate and BMI subgroups",
+      booktabs=T,
+      col.names = c( "Iron",
+                     "BMI groups",
+                     "Values", 
+                     "ref", "Q2", "Q3", "Q4", ""),
+      escape=F) %>%
+  column_spec(c(2), width = "3cm") %>% # NOTE: this has to come first to change row width?
+  column_spec(c(8), width = "4cm") %>% # NOTE: this has to come first to change row width?
+  collapse_rows(columns = 1:2, valign = "middle") %>% # note: valign no longer works
+  add_header_above(c("", "", "", "Quartile of iron-related biomarker" = 4, "Linear trend over quartiles$^c$" = 1), escape=F) %>%
+  kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size=10)  %>%
+    footnote(alphabet = c("Adjusted for baseline smoking, alcohol, education, HRT, age at menarche, age at first birth, oral contraceptive use, and menopause status.",
+                          "log transformed",
+                          "Iron covariate in quartile units"), 
+             threeparttable=T, escape=F)  # source: https://rdrr.io/cran/kableExtra/man/footnote.html
+
+
 ```
 
 
@@ -111,17 +137,37 @@ k2.bmi.q1
 \clearpage
 \newpage
 
+<!-- Source: section2-cch-premenopause.Rmd -->
 
 ```{r, results='markup'}
-premenop
+# this table removes the footnote with q1 index group HRs
+ kable(premenop.table.dat[,-1],
+               align='lllllc',
+      caption = "Breast cancer risk associated with increasing levels of iron-related biomarkers for women with premenopausal person-time.",
+      booktabs=T,
+      col.names = c( "Biomarkers",
+                     "Quartile 1$^c$",
+                     "Quartile 2", 
+                     "Quartile 3",
+                     "Quartile 4",
+                     " "),
+      escape=F) %>%
+  #mutate_all(linebreak) %>% # Source: http://haozhu233.github.io/kableExtra/best_practice_for_newline_in_latex_table.pdf
+  add_header_above(c(" ",  "Quartile of iron-related biomarker" = 4, "Linear trend over quartiles$^c$" = 1), escape=F) %>%
+  pack_rows("Iron ($\\\\mu$g/dL)", 1, 5, escape=F) %>%
+  pack_rows("Ferritin$^b$ ($\\\\mu$g/dL)", 6, 10, escape=F) %>%
+  pack_rows("Transferrin saturation (\\\\%)", 11, 15, escape=F) %>%
+  pack_rows("First principal component", 16, 20) %>%
+  column_spec(c(6), width = "4cm") %>% # NOTE: this has to come first to change row width?
+  footnote(alphabet = c("Adjusted for  baseline smoking, alcohol, education,  HRT, age at menarche, age at first birth, oral contraceptive use, and BMI.",
+                        "log transformed",
+                        "Iron covariate in quartile units"), 
+           #general="Bold values indicate statistical significance at alpha = 0.05.",
+           threeparttable=T) %>% # source: https://rdrr.io/cran/kableExtra/man/footnote.html
+  kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size=10)
+
 ```
 
-\clearpage
-\newpage
-
-```{r, results='markup'}
-postmenop
-```
 
 \clearpage
 \newpage
@@ -129,6 +175,14 @@ postmenop
 
 ```{r, results='markup'}
 premenop.q1
+```
+
+
+\clearpage
+\newpage
+
+```{r, results='markup'}
+postmenop
 ```
 
 
@@ -217,8 +271,8 @@ kable(ex.dat[,c("high", "fe.val", "threshold.f", "coef", "n.threshold")],
       escape=F) %>%
   column_spec(1:4, width = "12em") %>%
   collapse_rows(columns = 1:2, valign = "top") %>%
-  pack_rows("Postmenopausal", 1, 9, escape=F) %>%
-  pack_rows("Premenopausal", 10, 18, escape=F) %>%
+  pack_rows("Postmenopausal", 1, 10, escape=F) %>%
+  pack_rows("Premenopausal", 11, 19, escape=F) %>%
 #  pack_rows("Ferritin $\\\\leq$ threshold ($\\\\mu$g/L)", 1,6, escape=F) %>%
 #  pack_rows("Transferrin saturation $\\\\geq$ threshold (\\\\%)", 7, 12, escape=F) %>%
   kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size=10)

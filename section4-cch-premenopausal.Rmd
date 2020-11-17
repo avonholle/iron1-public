@@ -336,7 +336,7 @@ models1
 ```{r}
 
 # upper thresholds
-thresh = c(200)
+thresh = c(200,300)
   
 models.high = lapply(thresh, function(x) get.coefs(x, "high"))
 
@@ -363,11 +363,13 @@ cox.dat.premenop2$high=1
 
 
 cox.dat.pre = rbind(cox.dat.premenop1, cox.dat.premenop2)
+factor(cox.dat.pre$threshold)
 cox.dat.pre$threshold.f = with(cox.dat.pre, factor(threshold, 
                                          labels = c("$\\leq$ 12",
                                                     "$\\leq$ 25",
                                                     "$\\leq$ 45",
-                                                    "$\\geq$ 200" )))
+                                                    "$\\geq$ 200",
+                                                    "$\\geq$ 300")))
 cox.dat.pre
 
 save(cox.dat.pre, file="../sections/k4-pre.RData")

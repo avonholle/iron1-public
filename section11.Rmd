@@ -1,14 +1,14 @@
 ---
 title: "Section 11: Post-hoc 8: Sensitivity analysis for primary association, removing first two years of person-time"
 output:
+  html_document:
+    theme: united
+    toc: yes
   pdf_document:
     toc: yes
     number_sections: true
     includes:
       in_header: header.tex 
-  html_document:
-    theme: united
-    toc: yes
 geometry: margin=1.5cm
 editor_options:
   chunk_output_type: console
@@ -579,12 +579,11 @@ k11 = kable(cox.dat.wide[,-1],
   pack_rows("Iron ($\\\\mu$g/dL)", 1, 4, escape=F) %>%
   pack_rows("Ferritin$^b$ ($\\\\mu$g/dL)", 5, 8, escape=F) %>%
   pack_rows("Transferrin saturation (\\\\%)", 9, 12, escape=F) %>%
-  pack_rows("First principal component$^d$", 13, 16, escape=F) %>%
+  pack_rows("First principal component", 13, 16, escape=F) %>%
   column_spec(c(6), width = "4cm") %>% # NOTE: this has to come first to change row width?
   footnote(alphabet = c("Adjusted for  baseline smoking, alcohol, education,  HRT, age at menarche, age at first birth, oral contraceptive use, menopause status, BMI, and a product term between the last two variables.",
                         "log transformed",
-                        "Iron covariate in quartile units",
-                        "The first principal component explains 72% of the variance and represents loadings of 0.63, 0.40, and 0.66 for the iron, ferritin and transferrin saturation measures, respectively."), 
+                        "Iron covariate in quartile units"), 
            #general="Bold values indicate statistical significance at alpha = 0.05.",
            threeparttable=T) %>% # source: https://rdrr.io/cran/kableExtra/man/footnote.html
   kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size=10)

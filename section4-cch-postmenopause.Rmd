@@ -236,7 +236,7 @@ models1
 ```{r}
 
 # upper thresholds
-thresh = c(300)
+thresh = c(200,300)
   
 models.high = lapply(thresh, function(x) get.coefs(x, "high"))
 
@@ -269,7 +269,8 @@ cox.dat.post$threshold.f = with(cox.dat.post, factor(threshold,
                                          labels = c("$\\leq$ 12",
                                                     "$\\leq$ 25",
                                                     "$\\leq$ 45",
-                                                    "$\\geq$ 300" )))
+                                                    "$\\geq$ 200",
+                                                    "$\\geq$ 300")))
 cox.dat.post
 
 save(cox.dat.post, file="../sections/k4-post.RData")

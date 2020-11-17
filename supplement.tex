@@ -264,7 +264,7 @@ Biomarkers & Quartile 1 & Quartile 2 & Quartile 3 & Quartile 4 &  \\
 \hspace{1em}Unadjusted & ref & 1.01 (0.84, 1.22) & 1.07 (0.88, 1.28) & 1.03 (0.86, 1.24) & 1.02 (0.96, 1.08)\\
 \hspace{1em}Adjusted$^a$ & ref & 0.96 (0.78, 1.17) & 1.08 (0.88, 1.33) & 0.94 (0.77, 1.16) & 1.00 (0.93, 1.06)\\
 \addlinespace[0.3em]
-\multicolumn{6}{l}{\textbf{First principal component$^d$}}\\
+\multicolumn{6}{l}{\textbf{First principal component}}\\
 \hspace{1em}Median & -1.5 & -0.3 & 0.6 & 1.5 & \\
 \hspace{1em}Ranges & [-9.82,-0.786] & (-0.786,0.156] & (0.156,0.977] & (0.977,5.11] & \\
 \hspace{1em}Unadjusted & ref & 1.06 (0.87, 1.28) & 1.08 (0.89, 1.31) & 1.08 (0.89, 1.31) & 1.03 (0.97, 1.09)\\
@@ -275,7 +275,6 @@ Biomarkers & Quartile 1 & Quartile 2 & Quartile 3 & Quartile 4 &  \\
 \item[a] Adjusted for  baseline smoking, alcohol, education,  HRT, age at menarche, age at first birth, oral contraceptive use, menopause status, BMI, and a product term between the last two variables.
 \item[b] log transformed
 \item[c] Iron covariate in quartile units
-\item[d] The first principal component explains 72\% of the variance and represents loadings of 0.63, 0.40, and 0.66 for the iron, ferritin and transferrin saturation measures, respectively.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
@@ -312,7 +311,7 @@ Biomarkers & Quartile 1 & Quartile 2 & Quartile 3 & Quartile 4 &  \\
 \hspace{1em}Unadjusted & ref & 0.97 (0.83, 1.13) & 1.05 (0.90, 1.24) & 0.99 (0.84, 1.17) & 1.01 (0.96, 1.06)\\
 \hspace{1em}Adjusted$^a$ & ref & 0.94 (0.79, 1.11) & 1.10 (0.92, 1.31) & 0.98 (0.82, 1.17) & 1.01 (0.95, 1.07)\\
 \addlinespace[0.3em]
-\multicolumn{6}{l}{\textbf{First principal component$^d$}}\\
+\multicolumn{6}{l}{\textbf{First principal component}}\\
 \hspace{1em}Median & -1.5 & -0.3 & 0.6 & 1.5 & \\
 \hspace{1em}Ranges & [-9.93,-0.799] & (-0.799,0.146] & (0.146,0.979] & (0.979,5.13] & \\
 \hspace{1em}Unadjusted & ref & 1.14 (0.97, 1.33) & 1.06 (0.90, 1.24) & 1.10 (0.93, 1.29) & 1.02 (0.97, 1.07)\\
@@ -323,7 +322,6 @@ Biomarkers & Quartile 1 & Quartile 2 & Quartile 3 & Quartile 4 &  \\
 \item[a] Adjusted for  baseline smoking, alcohol, education,  HRT, age at menarche, age at first birth, oral contraceptive use, menopause status, BMI, and a product term between the last two variables.
 \item[b] log transformed
 \item[c] Iron covariate in quartile units
-\item[d] The first principal component explains 72\% of the variance and represents loadings of 0.63, 0.40, and 0.66 for the iron, ferritin and transferrin saturation measures, respectively.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
@@ -581,7 +579,7 @@ Iron & BMI groups & Values & ref$^c$ & Q2 & Q3 & Q4 & \\
 
 \begin{table}[H]
 
-\caption{\label{tab:unnamed-chunk-28}Breast cancer risk associated with increasing levels of iron-related biomarkers for women with premenopausal person-time.}
+\caption{\label{tab:unnamed-chunk-18}Breast cancer risk associated with increasing levels of iron-related biomarkers for women with premenopausal person-time.}
 \centering
 \begin{threeparttable}
 \resizebox{\linewidth}{!}{
@@ -636,7 +634,7 @@ Biomarkers & Quartile 1$^c$ & Quartile 2 & Quartile 3 & Quartile 4 &  \\
 
 \begin{table}[H]
 
-\caption{\label{tab:unnamed-chunk-17}Breast cancer risk associated with increasing levels of iron-related biomarkers for participants who were postmenopausal at study entry}
+\caption{\label{tab:unnamed-chunk-16}Breast cancer risk associated with increasing levels of iron-related biomarkers for participants who were postmenopausal at study entry}
 \centering
 \begin{threeparttable}
 \resizebox{\linewidth}{!}{
@@ -711,7 +709,9 @@ High/low indicator & Iron measure & Cut points for dichotomized iron measure thr
 \cmidrule{2-5}
 \hspace{1em}\multirow[t]{-4}{12em}{\raggedright\arraybackslash Low} & Transferrin saturation (\%) & $\leq$ 20 & 1.03 (0.86, 1.23) & 576\\
 \cmidrule{1-5}
-\hspace{1em} & Ferritin ($\mu$g / L) & $\geq$ 300 & 1.03 (0.67, 1.59) & 85\\
+\hspace{1em} &  & $\geq$ 200 & 1.08 (0.86, 1.35) & 337\\
+\cmidrule{3-5}
+\hspace{1em} & \multirow[t]{-2}{12em}{\raggedright\arraybackslash Ferritin ($\mu$g / L)} & $\geq$ 300 & 1.03 (0.67, 1.59) & 85\\
 \cmidrule{2-5}
 \hspace{1em} &  & $\geq$ 45 & 1.36 (1.07, 1.74) & 278\\
 \cmidrule{3-5}
@@ -719,10 +719,10 @@ High/low indicator & Iron measure & Cut points for dichotomized iron measure thr
 \cmidrule{3-5}
 \hspace{1em} &  & $\geq$ 55 & 1.05 (0.66, 1.66) & 72\\
 \cmidrule{3-5}
-\hspace{1em}\multirow[t]{-5}{12em}{\raggedright\arraybackslash High} & \multirow[t]{-4}{12em}{\raggedright\arraybackslash Transferrin saturation (\%)} & $\geq$ 60 & 1.24 (0.63, 2.47) & 35\\
-\cmidrule{1-5}
 \addlinespace[0.3em]
 \multicolumn{5}{l}{\textbf{Premenopausal}}\\
+\hspace{1em}\multirow[t]{-6}{12em}{\raggedright\arraybackslash High} & \multirow[t]{-4}{12em}{\raggedright\arraybackslash Transferrin saturation (\%)} & $\geq$ 60 & 1.24 (0.63, 2.47) & 35\\
+\cmidrule{1-5}
 \hspace{1em} &  & $\leq$ 12 & 0.65 (0.45, 0.93) & 166\\
 \cmidrule{3-5}
 \hspace{1em} &  & $\leq$ 25 & 0.88 (0.69, 1.12) & 477\\
@@ -731,15 +731,17 @@ High/low indicator & Iron measure & Cut points for dichotomized iron measure thr
 \cmidrule{2-5}
 \hspace{1em}\multirow[t]{-4}{12em}{\raggedright\arraybackslash Low} & Transferrin saturation (\%) & $\leq$ 20 & 0.76 (0.58, 1.00) & 415\\
 \cmidrule{1-5}
-\hspace{1em} & Ferritin ($\mu$g / L) & $\geq$ 200 & 0.93 (0.47, 1.84) & 45\\
+\hspace{1em} &  & $\geq$ 200 & 0.93 (0.47, 1.84) & 45\\
+\cmidrule{3-5}
+\hspace{1em} & \multirow[t]{-2}{12em}{\raggedright\arraybackslash Ferritin ($\mu$g / L)} & $\geq$ 300 & 1.46 (0.50, 4.31) & 18\\
 \cmidrule{2-5}
 \hspace{1em} &  & $\geq$ 45 & 1.26 (0.88, 1.79) & 200\\
 \cmidrule{3-5}
 \hspace{1em} &  & $\geq$ 50 & 1.10 (0.69, 1.74) & 114\\
 \cmidrule{3-5}
-\hspace{1em} &  & $\geq$ 55 & 1.15 (0.62, 2.14) & 60\\
+ &  & $\geq$ 55 & 1.15 (0.62, 2.14) & 60\\
 \cmidrule{3-5}
-\hspace{1em}\multirow[t]{-5}{12em}{\raggedright\arraybackslash High} & \multirow[t]{-4}{12em}{\raggedright\arraybackslash Transferrin saturation (\%)} & $\geq$ 60 & 1.64 (0.70, 3.84) & 31\\
+\multirow[t]{-6}{12em}{\raggedright\arraybackslash High} & \multirow[t]{-4}{12em}{\raggedright\arraybackslash Transferrin saturation (\%)} & $\geq$ 60 & 1.64 (0.70, 3.84) & 31\\
 \bottomrule
 \end{tabular}}
 \end{table}

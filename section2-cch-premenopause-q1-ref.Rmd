@@ -1,14 +1,14 @@
 ---
 title: "Section 2: Association between iron status and breast cancer risk for women who are premenopausal at baseline (case-cohort analysis). Change referent to q2 to q4"
 output:
+  html_document:
+    theme: united
+    toc: yes
   pdf_document:
     toc: yes
     number_sections: true
     includes:
       in_header: header.tex 
-  html_document:
-    theme: united
-    toc: yes
 linkcolor: red
 urlcolor: red
 citecolor: red

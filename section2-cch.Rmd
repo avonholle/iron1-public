@@ -1,14 +1,14 @@
 ---
 title: "Section 2: Association between iron status and breast cancer risk (case-cohort analysis)"
 output:
+  html_document:
+    theme: united
+    toc: yes
   pdf_document:
     toc: yes
     number_sections: true
     includes:
       in_header: header.tex 
-  html_document:
-    theme: united
-    toc: yes
 geometry: margin=1.5cm
 editor_options:
   chunk_output_type: console

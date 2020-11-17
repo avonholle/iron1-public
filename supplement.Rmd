@@ -1,20 +1,23 @@
 --- 
+always_allow_html: yes
+bibliography: ../bib/iron-lit.bib
+description: Summary of analyses
+editor_options:
+  chunk_output_type: console
+geometry: margin=1.5cm
+link-citations: yes
 output:
+  html_document:
+    df_print: paged
+    toc: no
   pdf_document:
+    fig_caption: yes
     includes:
       in_header: ../preamble-latex-nobookdown.tex
+    keep_tex: yes
     latex_engine: pdflatex
-    keep_tex: true
     number_sections: yes
     toc: no
-    fig_caption: true
-bibliography: ../bib/iron-lit.bib
-link-citations: yes
-geometry: margin=1.5cm
-description: "Summary of analyses"
-always_allow_html: true
-editor_options: 
-  chunk_output_type: console
 ---
 
 
@@ -23,8 +26,8 @@ knitr::opts_chunk$set(echo = F,
                       results = 'markup',
                       warning = F,
                       fig.width=10,
-                      fig.height=8)
-
+                      fig.height=8,
+                      knitr.table.format = "html")
 ```
 
 
@@ -71,6 +74,7 @@ require(kableExtra)
 
 
 ```{r}
+library(dplyr)
 k2.cch2
 ```
 
