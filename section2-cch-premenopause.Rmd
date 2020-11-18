@@ -1502,7 +1502,8 @@ pval = do.call(rbind.data.frame, pval.)
 pval$min.p = do.call(pmin, pval[,c("test.time", "test.time.rank", "test.km")])
 pval
 
+df.pc1.km.pre = df.pc1.km
 # save for reviewer-tables.Rmd
-save(pval, km.plot, file="prem-km-pc1.RData")
+save(pval, km.plot, df.pc1.km.pre, file="prem-km-pc1.RData")
 
 ```

@@ -140,37 +140,3 @@ ggsave(p1.rev, file="iron-violin.png", dpi=600, width=10, height=6)
 
 ```
 
-
-#### Correlation between serum iron biomarkers
-
-```{r, results='markup', echo=TRUE}
-
-# NOTE: use the derived variables
-
-# covariance matrix
-sub.dat = df3[iron.vars]
-cor1 = cor(sub.dat, use="complete.obs")
-cor1
-
-# correlation matrix
-cov2cor(cor1)
-```
-
-
-#### Correlation plots
-
-Original data
-
-```{r}
-chart.Correlation(sub.dat, histogram=TRUE, pch=19)
-```
-
-\clearpage
-\newpage
-
-log-transformed data
-
-```{r}
-chart.Correlation(log(sub.dat), histogram=TRUE, pch=19)
-```
-

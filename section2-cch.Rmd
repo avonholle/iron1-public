@@ -646,6 +646,40 @@ k2.cch = kable(cox.dat.wide[,-1],
   kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size=10)
   
 save(k2.cch, cox.dat.wide, file="../sections/k2-cch.RData")
+
+```
+
+
+```{r}
+k2.cch.latex = kable(cox.dat.wide[,-1],
+               align='lllllc',
+      caption = "Breast cancer risk associated with increasing levels of iron-related biomarkers, Sister Study case-cohort sample.",
+      booktabs=T,
+      col.names = c( "Biomarkers",
+                     "Quartile 1",
+                     "Quartile 2", 
+                     "Quartile 3",
+                     "Quartile 4",
+                     " "),
+      format="latex",
+      escape=F) %>%
+  #mutate_all(linebreak) %>% # Source: http://haozhu233.github.io/kableExtra/best_practice_for_newline_in_latex_table.pdf
+  add_header_above(c(" ",  "Quartile of iron-related biomarker" = 4, "Linear trend over quartiles$^c$" = 1), escape=F) %>%
+  pack_rows("Iron ($\\\\mu$g/dL)", 1, 4, escape=F) %>%
+  pack_rows("Ferritin$^b$ ($\\\\mu$g/dL)", 5, 8, escape=F) %>%
+  pack_rows("Transferrin saturation (\\\\%)", 9, 12, escape=F) %>%
+  pack_rows("First principal component$^d$", 13, 16, escape=F) %>%
+  column_spec(c(6), width = "4cm") %>% # NOTE: this has to come first to change row width?
+  footnote(alphabet = c("Adjusted for  baseline smoking, alcohol, education,  HRT, age at menarche, age at first birth, oral contraceptive use, menopause status, BMI, and a product term between the last two variables.",
+                        "log transformed",
+                        "Iron covariate in quartile units",
+                        "The first principal component explains 72% of the variance and represents loadings of 0.63, 0.40, and 0.66 for the iron, ferritin and transferrin saturation measures, respectively."), 
+           #general="Bold values indicate statistical significance at alpha = 0.05.",
+           threeparttable=T) %>% # source: https://rdrr.io/cran/kableExtra/man/footnote.html
+  kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size=10)
+
+cat(k2.cch.latex, file="t2-latex.txt")
+
 ```
 
 

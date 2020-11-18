@@ -1266,6 +1266,7 @@ pval$min.p = do.call(pmin, pval[,c("test.time", "test.time.rank", "test.km")])
 pval
 
 # save for reviewer-tables.Rmd
-save(pval, km.plot, file="post-km-pc1.Rmd")
+df.pc1.km.post=df.pc1.km
+save(pval, km.plot, df.pc1.km.post, file="post-km-pc1.RData")
 
 ```
