@@ -1138,6 +1138,21 @@ df.pc$pc1.qrt = cut(df.pc$PC1, qrts, include.lowest = T, dig.lab=4)
 summary(df.pc$pc1.qrt)
 ```
 
+```{r}
+# deciles
+
+#  pc1
+summary(df.pc$PC1)
+dec = quantile(df.pc$PC1, seq(0,1,by=0.1), na.rm=T) # use sample for quartile calcs
+df.pc$pc1.dec = cut(df.pc$PC1, dec, include.lowest = T, dig.lab=2)
+summary(df.pc$pc1.dec)
+
+# ferritin
+dec = quantile(df.pc$fertn,seq(0,1,by=0.1), na.rm=T) # use sample for quartile calcs
+df.pc$fertn.dec = cut(df.pc$fertn, dec, include.lowest = T, dig.lab=4)
+summary(df.pc$fertn.dec)
+```
+
 
 ```{r, eval=T, include=F}
 
@@ -1386,6 +1401,31 @@ save(pval, km.plot, df.fertn.km.pre, file="prem-km-fertn.RData")
 
 ```{r}
 
+# run km strata function over deciles for fertn
+names.fertn = levels(factor(ccdat.rev$fertn.dec)); names.fertn
+ironvar2="fertn"
+list.fertn.km = lapply(names.fertn, get.strata, ironvar="fertn.dec", ironvar2=ironvar2)
+
+# extract out first item of list of list from function above
+df.fertn.km. = sapply(list.fertn.km, "[", 3) 
+# append all km data into one data frame for plotting
+df.fertn.km = do.call(rbind.data.frame, df.fertn.km.)
+dim(df.fertn.km)
+summary(df.fertn.km)
+head(df.fertn.km)
+
+km.plot = ggplot(data=df.fertn.km,
+       aes(x=time, y=km, colour=strata)) + 
+  labs(title=ironvar2)+
+  geom_step() +
+  xlim(40,55) + ylim(0.97,1) +
+  theme_bw()
+km.plot
+
+```
+
+```{r}
+
 # run km strata function over all four levels of strata for fe
 
 names.fe = levels(factor(ccdat.rev$fe.qrt)); names.fe
@@ -1511,3 +1551,45 @@ df.pc1.km.pre = df.pc1.km
 save(pval, km.plot, df.pc1.km.pre, file="prem-km-pc1.RData")
 
 ```
+
+```{r}
+
+# run km strata function over all four levels of strata for pc1
+
+names.pc1 = levels(factor(ccdat.rev$pc1.dec)); names.pc1
+ironvar2="PC1"
+list.pc1.km = lapply(names.pc1, get.strata, ironvar="pc1.dec", ironvar2=ironvar2)
+
+# extract out first item of list of list from function above
+df.pc1.km. = sapply(list.pc1.km, "[", 3) 
+# append all km data into one data frame for plotting
+df.pc1.km = do.call(rbind.data.frame, df.pc1.km.)
+dim(df.pc1.km)
+summary(df.pc1.km)
+levels(df.pc1.km$strata)
+
+
+# source: http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/
+# The palette with grey:
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# The palette with black:
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+km.plot = ggplot(data=df.pc1.km,
+       aes(x=time, y=km, colour=strata)) + 
+  labs(title="Survival probability by quartiles of first principal \ncomponent of three primary iron measures.",
+       x="Age (years)",
+       y="Survival probability",
+       caption="Note: Lowest quartile indicates lowest iron values") +
+  geom_step(size=1) +
+  xlim(40,55)  +
+  ylim(0.975,1)+
+  scale_color_manual(name = "Quartiles",
+                     labels = c("Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"), 
+                     values = c(cbbPalette,cbPalette)) +
+  theme_bw(base_size = 22)
+km.plot
+
+```
+
