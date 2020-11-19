@@ -206,11 +206,18 @@ df.pc$fesat.qrt = cut(df.pc$fesat, qrts, include.lowest = T, dig.lab=4)
 qrts = quantile(df.pc$fe, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
 df.pc$fe.qrt = cut(df.pc$fe, qrts, include.lowest = T, dig.lab=4)
 
-qrts = quantile(df.pc$fertn.log, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
-df.pc$fertn.qrt = cut(df.pc$fertn.log, qrts, include.lowest = T, dig.lab=4)
+# qrts = quantile(df.pc$fertn.log, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
+# df.pc$fertn.qrt = cut(df.pc$fertn.log, qrts, include.lowest = T, dig.lab=4)
 
 qrts = quantile(df.pc$PC1, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
 df.pc$pc1.qrt = cut(df.pc$PC1, qrts, include.lowest = T, dig.lab=4)
+
+# fertn
+# ==========================================
+qrts = quantile(df.pc$fertn, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
+df.pc$fertn.qrt = cut(df.pc$fertn, qrts, include.lowest = T, dig.lab=4)
+summary(df.pc$fertn.qrt)
+
 
 ```
 
@@ -1129,6 +1136,7 @@ get.strata = function(strata, ironvar, ironvar2){
 
 ```{r}
 
+
 # run km strata function over all four levels of strata for fertn.log
 names.fertn = levels(factor(ccdat.rev$fertn.qrt)); names.fertn
 ironvar2="fertn.log"
@@ -1140,6 +1148,8 @@ df.fertn.km. = sapply(list.fertn.km, "[", 3)
 df.fertn.km = do.call(rbind.data.frame, df.fertn.km.)
 dim(df.fertn.km)
 summary(df.fertn.km)
+head(df.fertn.km)
+
 
 km.plot = ggplot(data=df.fertn.km,
        aes(x=time, y=km, colour=strata)) + 
@@ -1156,8 +1166,9 @@ pval = do.call(rbind.data.frame, pval.)
 pval$min.p = do.call(pmin, pval[,c("test.time", "test.time.rank", "test.km")])
 pval
 
+df.fertn.km.post = df.fertn.km
 # save for reviewer-tables.Rmd
-save(pval, km.plot, file="post-km-fertn.Rmd")
+save(pval, km.plot, df.fertn.km.post, file="post-km-fertn.RData")
 ```
 
 
@@ -1191,8 +1202,9 @@ pval = do.call(rbind.data.frame, pval.)
 pval$min.p = do.call(pmin, pval[,c("test.time", "test.time.rank", "test.km")])
 pval
 
+df.fe.km.post = df.fe.km
 # save for reviewer-tables.Rmd
-save(pval, km.plot, file="post-km-fe.Rmd")
+save(pval, km.plot, df.fe.km.post, file="post-km-fe.RData")
 
 ```
 
@@ -1229,7 +1241,7 @@ pval
 
 
 # save for reviewer-tables.Rmd
-save(pval, km.plot, file="post-km-fesat.Rmd")
+save(pval, km.plot, file="post-km-fesat.RData")
 
 ```
 

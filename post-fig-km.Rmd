@@ -41,6 +41,8 @@ require(ggpubr)
 load(file="prem-km-pc1.RData") # has df.pc1.km.pre from section2-cch-premenopause.Rmd
 load(file="post-km-pc1.RData") # has df.pc1.km.pre from section2-cch-postmenopause.Rmd
 
+load(file="prem-km-fertn.RData") # has df.fertn.km.pre from section2-cch-postmenopause.Rmd
+load(file="post-km-fertn.RData") # has df.fertn.km.post from section2-cch-postmenopause.Rmd
 
 ```
 
@@ -51,26 +53,52 @@ load(file="post-km-pc1.RData") # has df.pc1.km.pre from section2-cch-postmenopau
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 km.plot.pre = ggplot(data=df.pc1.km.pre,
-       aes(x=time, y=km, colour=strata)) + 
-   labs(title="Premenopausal",
+       aes(x=time, y=1-km, colour=strata)) + 
+   labs(title="Premenopausal PC1",
         x="Age (years)",
         y="") +
   #      caption="Note: Lowest quartile indicates lowest iron values") +
   geom_step(size=1) +
-  xlim(40,55)  +
-  ylim(0.975,1)+
+  xlim(40,55) +
+  ylim(0, 0.025) +
   scale_color_manual(name = "Quartiles",
                      labels = c("Q1", "Q2", "Q3", "Q4"), 
                      values = cbbPalette) +
-  theme_bw(base_size = 22)
+  theme_bw(base_size = 15) +
+  theme(legend.position="bottom",
+        plot.title = element_text(size=15)) +
+  guides(colour = guide_legend(nrow = 2))
 km.plot.pre
 ```
 
 ```{r}
 
+km.plot.fertn.pre = ggplot(data=df.fertn.km.pre,
+       aes(x=time, y=1-km, colour=strata)) + 
+   labs(title="Premenopausal ferritin (\u03bcg/dL)",
+        x="Age (years)",
+        y="") +
+  #      caption="Note: Lowest quartile indicates lowest iron values") +
+  geom_step(size=1) +
+  xlim(40,55)  +
+  ylim(0,0.03)+
+  scale_color_manual(name = "Quartiles",
+                     #labels = c("Q1", "Q2", "Q3", "Q4"), 
+                     values = cbbPalette) +
+  theme_bw(base_size = 15) +
+  theme(legend.position="bottom",
+        plot.title = element_text(size=15)) +
+  guides(colour = guide_legend(nrow = 2))
+
+km.plot.fertn.pre
+```
+
+
+```{r}
+
 km.plot.post = ggplot(data=df.pc1.km.post,
-       aes(x=time, y=km, colour=strata)) + 
-   labs(title="Postmenopausal",
+       aes(x=time, y=1-km, colour=strata)) + 
+   labs(title="Postmenopausal PC1",
         x="Age (years)",
         y="") +
   #      caption="Note: Lowest quartile indicates lowest iron values") +
@@ -80,37 +108,66 @@ km.plot.post = ggplot(data=df.pc1.km.post,
   scale_color_manual(name = "Quartiles",
                      labels = c("Q1", "Q2", "Q3", "Q4"), 
                      values = cbbPalette) +
-  theme_bw(base_size = 22)
+  theme_bw(base_size = 15) +
+  theme(legend.position="bottom",
+        plot.title = element_text(size=15)) +
+  guides(colour = guide_legend(nrow = 2))
 km.plot.post
 ```
 
 
 ```{r}
-fig1 = ggarrange(km.plot.pre, km.plot.post,
-#          labels = c("Premenopause", "Postmenopause"),
-          legend="bottom",
-          common.legend=T,
-          ncol = 2, nrow = 1)
 
-annotate_figure(fig1,
-               top = text_grob("Survival probability by quartiles of first principal component \nof three primary iron measures", 
-                               color = "black", face = "bold", size = 18),
-               bottom = text_grob("Note: Lowest quartile indicates lowest iron values", color = "black",
-                                  hjust = 1, x = 1, face = "italic", size = 15),
-               left = text_grob("Survival probability", color = "black", size=20, rot = 90)#,
-#               fig.lab = "Figure 1", fig.lab.face = "bold"
-)
+km.plot.fertn.post = ggplot(data=df.fertn.km.post,
+       aes(x=time, y=1-km, colour=strata)) + 
+   labs(title="Postmenopausal ferritin (\u03bcg/dL)",
+        x="Age (years)",
+        y="") +
+  #      caption="Note: Lowest quartile indicates lowest iron values") +
+  geom_step(size=1) +
+  #xlim(40,55)  +
+  ylim(0,0.12)+
+  scale_color_manual(name = "Quartiles",
+                     #labels = c("Q1", "Q2", "Q3", "Q4"), 
+                     values = cbbPalette) +
+  theme_bw(base_size = 15) +
+  theme(legend.position="bottom",
+        plot.title = element_text(size=15)) +
+  guides(colour = guide_legend(nrow = 2))
+
+km.plot.fertn.post
 ```
 
 ```{r}
-png("km2-plot.png", width=1200, height=600)
+
+fig1 = ggarrange(km.plot.pre, km.plot.post,
+                 km.plot.fertn.pre, km.plot.fertn.post,
+#          labels = c("Premenopause", "Postmenopause"),
+          legend="bottom",
+          #common.legend=T,
+          ncol = 4, nrow = 1)
 
 annotate_figure(fig1,
-               #top = text_grob("Survival probability by quartiles of first principal\n component of three primary iron measures", 
-              #                 color = "black", face = "bold", size = 22),
+               top = text_grob("Cumulative incidence by quartiles of ferritin and first principal component of three primary iron measures", 
+                               color = "black", face = "bold", size = 18),
                bottom = text_grob("Note: Lowest quartile indicates lowest iron values", color = "black",
                                   hjust = 1, x = 1, face = "italic", size = 15),
-               left = text_grob("Survival probability", color = "black", size=20, rot = 90)#,
+               left = text_grob("Cumulative Incidence", color = "black", size=20, rot = 90)#,
+#               fig.lab = "Figure 1", fig.lab.face = "bold"
+)
+
+
+```
+
+```{r}
+png("km2-plot.png", width=1200, height=400)
+
+annotate_figure(fig1,
+               top = text_grob("Cumulative incidence by menopause statua and quartiles of ferritin and first principal component (PC1) of three primary iron measures", 
+                               color = "black", face = "bold", size = 18),
+               bottom = text_grob("Note: Lowest quartile indicates lowest iron values", color = "black",
+                                  hjust = 1, x = 1, face = "italic", size = 15),
+               left = text_grob("Cumulative Incidence", color = "black", size=20, rot = 90)#,
 #               fig.lab = "Figure 1", fig.lab.face = "bold"
 )
 

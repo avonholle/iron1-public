@@ -1106,14 +1106,14 @@ ggsave(hist.premenop + scale_x_continuous(breaks = breaks_fun),
 # ferritin quart for km plots
 summary(df.pc$fertn.log)
 qrts = quantile(df.pc$fertn.log, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
-df.pc$fertn.cutq = cut(df.pc$fertn.log, qrts, include.lowest = T, dig.lab=4)
+df.pc$fertn.cutq = cut(df.pc$fertn.log, qrts, include.lowest = T, dig.lab=2)
 summary(df.pc$fertn.cutq)
 
 # transferrin saturation
 
 summary(df.pc$fesat)
 qrts = quantile(df.pc$fesat, c(0, 0.25, 0.5, 0.75, 1), na.rm=T) # use sample for quartile calcs
-df.pc$fesat.qrt = cut(df.pc$fesat, qrts, include.lowest = T, dig.lab=4)
+df.pc$fesat.qrt = cut(df.pc$fesat, qrts, include.lowest = T, dig.lab=2)
 summary(df.pc$fesat.qrt)
 
 # fertn
@@ -1349,9 +1349,9 @@ get.strata = function(strata, ironvar, ironvar2){
 ```{r}
 
 # run km strata function over all four levels of strata for fertn.log
-names.fertn = levels(factor(ccdat.rev$fertn.cutq)); names.fertn
+names.fertn = levels(factor(ccdat.rev$fertn.qrt)); names.fertn
 ironvar2="fertn.log"
-list.fertn.km = lapply(names.fertn, get.strata, ironvar="fertn.cutq", ironvar2=ironvar2)
+list.fertn.km = lapply(names.fertn, get.strata, ironvar="fertn.qrt", ironvar2=ironvar2)
 
 # extract out first item of list of list from function above
 df.fertn.km. = sapply(list.fertn.km, "[", 3) 
@@ -1376,8 +1376,10 @@ pval = do.call(rbind.data.frame, pval.)
 pval$min.p = do.call(pmin, pval[,c("test.time", "test.time.rank", "test.km")])
 pval
 
+df.fertn.km.pre = df.fertn.km
+
 # save for reviewer-tables.Rmd
-save(pval, km.plot, file="prem-km-fertn.RData")
+save(pval, km.plot, df.fertn.km.pre, file="prem-km-fertn.RData")
 
 ```
 
@@ -1412,8 +1414,9 @@ pval = do.call(rbind.data.frame, pval.)
 pval$min.p = do.call(pmin, pval[,c("test.time", "test.time.rank", "test.km")])
 pval
 
+df.fe.km.pre = df.fe.km
 # save for reviewer-tables.Rmd
-save(pval, km.plot, file="prem-km-fe.RData")
+save(pval, km.plot, df.fe.km.pre, file="prem-km-fe.RData")
 
 ```
 
@@ -1448,8 +1451,9 @@ pval = do.call(rbind.data.frame, pval.)
 pval$min.p = do.call(pmin, pval[,c("test.time", "test.time.rank", "test.km")])
 pval
 
+df.fesat.km.pre = df.fesat.km
 # save for reviewer-tables.Rmd
-save(pval, km.plot, file="prem-km-fesat.RData")
+save(pval, km.plot, df.fesat.km.pre, file="prem-km-fesat.RData")
 
 ```
 
